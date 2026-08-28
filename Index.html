@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Garten of Gombo</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include A-Frame library for easy 3D/VR on mobile -->
+    <script src="https://aframe.io"></script>
+</head>
+<body>
+    <a-scene joystick-controls>
+        <!-- Dark Kindergarten Atmosphere -->
+        <a-sky color="#050510"></a-sky>
+        <a-ambient-light color="#222"></a-ambient-light>
+        
+        <!-- Flashlight (Attached to Player Camera) -->
+        
+            <a-light type="spot" color="#fff" intensity="1.5" distance="15" angle="30" position="0 0 0"></a-light>
+            <a-cursor color="#fff"></a-cursor>
+        
+
+        <!-- Floor and Walls -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="30" height="30" color="#333"></a-plane>
+        <a-box position="0 2 -15" width="30" height="4" depth="1" color="#4A2E80"></a-box> <!-- Playroom Wall -->
+
+        <!-- Mascot: Gombo -->
+        <a-box id="gombo" position="0 1.5 -8" width="2" height="3" depth="2" color="#00ff66">
+            <!-- Creepy Eyes -->
+            <a-sphere position="-0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
+            <a-sphere position="-0.4 0.8 1.2" radius="0.05" color="#000"></a-sphere>
+            <a-sphere position="0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
+            <a-sphere position="0.4 0.8 1.2" radius="0.05" color="#000"></a-sphere>
+        </a-box>
+    </a-scene>
+
+    <!-- Mobile Touch Controls Overlay -->
+    <div id="mobile-instructions">Drag screen to look around.<br>Use WASD or external keyboard if attached.</div>
+
+    <script src="game.js"></script>
+</body>
+</html>

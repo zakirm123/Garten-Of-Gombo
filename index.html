@@ -5,28 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Include A-Frame library for easy 3D/VR on mobile -->
+    <!-- Include A-Frame library -->
     <script src="https://aframe.io"></script>
+    <!-- Include Nipple.js for mobile on-screen joysticks -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
-    <a-scene joystick-controls>
-        <!-- Dark Kindergarten Atmosphere -->
+    <a-scene id="gameScene">
+        <!-- Dark Atmosphere -->
         <a-sky color="#050510"></a-sky>
         <a-ambient-light color="#222"></a-ambient-light>
         
-        <!-- Flashlight (Attached to Player Camera) -->
+        <!-- Player Camera Entity (Controlled by Joystick) -->
         
-            <a-light type="spot" color="#fff" intensity="1.5" distance="15" angle="30" position="0 0 0"></a-light>
-            <a-cursor color="#fff"></a-cursor>
+            
+                <!-- Flashlight -->
+                <a-light type="spot" color="#fff" intensity="1.5" distance="15" angle="30" position="0 0 0"></a-light>
+                <a-cursor color="#fff"></a-cursor>
+            
         
 
-        <!-- Floor and Walls -->
-        <a-plane position="0 0 0" rotation="-90 0 0" width="30" height="30" color="#333"></a-plane>
-        <a-box position="0 2 -15" width="30" height="4" depth="1" color="#4A2E80"></a-box> <!-- Playroom Wall -->
+        <!-- Environment -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="40" height="40" color="#1c1c1c"></a-plane>
+        
+        <!-- Room Walls -->
+        <a-box position="0 2 -20" width="40" height="4" depth="1" color="#4A2E80"></a-box>
+        <a-box position="0 2 20" width="40" height="4" depth="1" color="#4A2E80"></a-box>
+        <a-box position="-20 2 0" width="1" height="4" depth="40" color="#4A2E80"></a-box>
+        <a-box position="20 2 0" width="1" height="4" depth="40" color="#4A2E80"></a-box>
 
         <!-- Mascot: Gombo -->
-        <a-box id="gombo" position="0 1.5 -8" width="2" height="3" depth="2" color="#00ff66">
-            <!-- Creepy Eyes -->
+        <a-box id="gombo" position="0 1.5 -12" width="2" height="3" depth="2" color="#00ff66">
             <a-sphere position="-0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
             <a-sphere position="-0.4 0.8 1.2" radius="0.05" color="#000"></a-sphere>
             <a-sphere position="0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
@@ -34,8 +43,9 @@
         </a-box>
     </a-scene>
 
-    <!-- Mobile Touch Controls Overlay -->
-    <div id="mobile-instructions">Drag screen to look around.<br>Use WASD or external keyboard if attached.</div>
+    <!-- Touch Joystick Zone -->
+    <div id="joystick-zone"></div>
+    <div id="ui-overlay">Drag screen to look. Use joystick to move.</div>
 
     <script src="game.js"></script>
 </body>

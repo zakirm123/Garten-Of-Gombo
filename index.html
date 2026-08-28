@@ -9,7 +9,8 @@
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
-    <!-- iOS Interaction Unlock Shield Layer Screen -->
+
+    <!-- The Menu UI sits directly on top of the running canvas -->
     <div id="start-screen">
         <div class="start-box">
             <h1>GARTEN OF GOMBO</h1>
@@ -18,8 +19,8 @@
         </div>
     </div>
 
-    <!-- Active Game Elements Wrapper -->
-    <a-scene id="gameScene" style="display: none;" loading-screen="enabled: false">
+    <!-- Active Scene is always active but covered by CSS layer initially -->
+    <a-scene id="gameScene" loading-screen="enabled: false">
         <a-sky color="#05060f"></a-sky>
         <a-ambient-light color="#666677"></a-ambient-light>
         
@@ -57,7 +58,7 @@
         <a-sphere class="egg" position="-10 0.5 -20" radius="0.4" color="#fffce6"></a-sphere>
         <a-sphere class="egg" position="12 0.5 -2" radius="0.4" color="#fffce6"></a-sphere>
 
-        <!-- GOMBO Mascot Model -->
+        <!-- GOMBO Mascot Model (Red, Stitches, Horns) -->
         
             <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
             <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
@@ -83,7 +84,7 @@
 
     <button id="emergency-btn">TAP EMERGENCY BUTTON</button>
     <div id="joystick-zone"></div>
-    <div id="ui-overlay" style="display:none;">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
+    <div id="ui-overlay">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
     <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
 
     <script src="game.js"></script>

@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startScreen = document.getElementById('start-screen');
     const startBtn = document.getElementById('start-btn');
-    const gameScene = document.getElementById('gameScene');
     const joystickZone = document.getElementById('joystick-zone');
     const uiOverlay = document.getElementById('ui-overlay');
     
@@ -20,31 +19,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let zoyiFell = false;
     let gameActive = false;
 
-       // Trigger Game Activation upon touch or click
     function enterGame() {
-        startScreen.style.display = "none";
-        gameScene.style.display = "block";
+        if (gameActive) return; // Prevent multiple initializations
+        
+        // Remove screen using display hidden cleanly
+        startScreen.style.setProperty('display', 'none', 'important');
         joystickZone.style.display = "block";
         uiOverlay.style.display = "block";
         gameActive = true;
         
-        // Force full canvas layout resize event check to shake safari Awake
+        // Refresh 3D environment engine state instantly
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
-        }, 100);
+        }, 50);
     }
 
-    // Listen for both finger taps (mobile) and normal mouse clicks (desktop)
+    // Force touch interactions down cleanly across layout layers
     startBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Prevents iOS double-tap zoom bugs
+        e.stopPropagation();
+        enterGame();
+    }, { passive: true });
+
+    startBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         enterGame();
     });
 
-    startBtn.addEventListener('click', () => {
-        enterGame();
-    });
-
-    // Mobile Joystick framework mapping definition
+    // Mobile Joystick Setup
     const manager = nipplejs.create({
         zone: joystickZone, 
         mode: 'static',
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     manager.on('end', () => { moveX = 0; moveZ = 0; });
 
-    emergencyBtn.addEventListener('click', (e) => {
+    emergencyBtn.addEventListener('click', () => {
         if(zoyiIsChasing && !zoyiFell) {
             zoyiFell = true;
             zoyiIsChasing = false;

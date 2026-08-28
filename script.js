@@ -1,86 +1,140 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // UI Interface Hooks
     const startScreen = document.getElementById('start-screen');
-    const startBtn = document.getElementById('start-btn');
-    const joystickZone = document.getElementById('joystick-zone');
-    const uiOverlay = document.getElementById('ui-overlay');
-    
-    const player = document.querySelector('#player');
-    const gombo = document.querySelector('#gombo');
-    const zoyi = document.querySelector('#zoyibird');
-    const eggScore = document.getElementById('egg-score');
-    const emergencyBtn = document.getElementById('emergency-btn');
-    const achievement = document.getElementById('achievement-toast');
+    const newGameBtn = document.getElementById('new-game-btn');
+    const introScreen = document.getElementById('intro-screen');
+    const mohajushClockBtn = document.getElementById('mohajush-clock-btn');
+    const gameStage = document.getElementById('game-stage');
+    const rendererContainer = document.getElementById('renderer-container');
 
     let moveX = 0, moveZ = 0;
-    const speed = 0.12; 
+    const speed = 0.12;
     let eggsHandheld = 0;
     let eggsFed = 0;
     let zoyiIsChasing = false;
     let zoyiFell = false;
-    let gameActive = false;
+    let mainLoopRunning = false;
 
-    function enterGame() {
-        if (gameActive) return; // Prevent multiple initializations
-        
-        // Remove screen using display hidden cleanly
+    // --- STEP 1: CHOOSE NEW GAME ---
+    function triggerNewGame() {
         startScreen.style.setProperty('display', 'none', 'important');
-        joystickZone.style.display = "block";
-        uiOverlay.style.display = "block";
-        gameActive = true;
-        
-        // Refresh 3D environment engine state instantly
-        setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 50);
+        introScreen.style.display = "flex";
     }
 
-    // Force touch interactions down cleanly across layout layers
-    startBtn.addEventListener('touchstart', (e) => {
-        e.stopPropagation();
-        enterGame();
-    }, { passive: true });
+    newGameBtn.addEventListener('touchstart', (e) => { e.preventDefault(); triggerNewGame(); });
+    newGameBtn.addEventListener('click', () => { triggerNewGame(); });
 
-    startBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        enterGame();
-    });
+    // --- STEP 2: TAP THE HUGE MOHAJUSH CLOCK ICON TO ADVANCE TIME ---
+    function startActiveDaycare() {
+        introScreen.style.setProperty('display', 'none', 'important');
+        gameStage.style.display = "block";
 
-    // Mobile Joystick Setup
-    const manager = nipplejs.create({
-        zone: joystickZone, 
-        mode: 'static',
-        position: { left: '60px', bottom: '60px' },
-        color: 'white', 
-        size: 100
-    });
+        // Inject the heavy 3D A-Frame libraries into browser execution cleanly *AFTER* interaction
+        const aframeScript = document.createElement('script');
+        aframeScript.src = "https://aframe.io";
+        
+        aframeScript.onload = () => {
+            build3DEnvironmentScene();
+            initializeJoystickEngine();
+            mainLoopRunning = true;
+            tick();
+        };
+        document.head.appendChild(aframeScript);
+    }
 
-    manager.on('move', (evt, data) => {
-        if (data.vector) {
-            moveX = data.vector.x * speed;
-            moveZ = -data.vector.y * speed; 
-        }
-    });
-    manager.on('end', () => { moveX = 0; moveZ = 0; });
+    mohajushClockBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startActiveDaycare(); });
+    mohajushClockBtn.addEventListener('click', () => { startActiveDaycare(); });
 
-    emergencyBtn.addEventListener('click', () => {
-        if(zoyiIsChasing && !zoyiFell) {
-            zoyiFell = true;
-            zoyiIsChasing = false;
-            emergencyBtn.style.display = "none";
-            uiOverlay.innerHTML = "<span style='color:#00ff66;'>Zoyi missed and fell into the Ball Pit!</span>";
-            zoyi.setAttribute('position', '0 -15 -10');
-            achievement.style.display = "block";
-            setTimeout(() => { achievement.style.display = "none"; }, 5000);
-        }
-    });
+    // --- STEP 3: CONSTRUCT CORE HORROR ENGINE ENVIRONMENT METRICS ---
+    function build3DEnvironmentScene() {
+        rendererContainer.innerHTML = `
+            <a-scene embedded loading-screen="enabled: false">
+                <a-sky color="#05060f"></a-sky>
+                <a-ambient-light color="#777788"></a-ambient-light>
+                
+                
+                    
+                        <a-light type="spot" color="#fff" intensity="2.5" distance="25" angle="45"></a-light>
+                        <a-cursor color="#ff0000" scale="0.5 0.5 0.5"></a-cursor>
+                    
+                
 
+                <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#3c3f4a"></a-plane>
+                
+                <!-- Room Boundaries -->
+                <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
+                <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
+                <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
+                <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
+
+                <!-- Partitions and Ballpit layout zones -->
+                <a-box position="-15 2.5 5" width="1" height="5" depth="30" color="#6a44b5"></a-box>
+                <a-box position="15 2.5 5" width="1" height="5" depth="30" color="#6a44b5"></a-box>
+                <a-plane id="ballpit" position="0 0.05 -10" rotation="-90 0 0" width="16" height="12" color="#1a66b8"></a-plane>
+
+                <!-- Targets Collectibles -->
+                <a-sphere class="egg" position="-5 0.5 8" radius="0.4" color="#fffce6"></a-sphere>
+                <a-sphere class="egg" position="8 0.5 10" radius="0.4" color="#fffce6"></a-sphere>
+                <a-sphere class="egg" position="-18 0.5 -8" radius="0.4" color="#fffce6"></a-sphere>
+                <a-sphere class="egg" position="18 0.5 -15" radius="0.4" color="#fffce6"></a-sphere>
+                <a-sphere class="egg" position="0 0.5 20" radius="0.4" color="#fffce6"></a-sphere>
+
+                <!-- GOMBO Mascot Monster Model Instance (With Horns & Stitches on Back) -->
+                
+                    <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                    <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                    <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                    <!-- Back Stitches -->
+                    <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
+                
+
+                <!-- ZOYI BIRD Base Model -->
+                
+                    <a-cone radius-bottom="1.2" height="3" color="#ffcbd7"></a-cone>
+                    <a-box id="zoyi-mouth" position="0 0.8 0.8" width="1.2" height="0.6" depth="0.6" color="#ffaa1a"></a-box>
+                    <a-sphere position="-0.3 1.3 0.8" radius="0.15" color="#fff"></a-sphere>
+                    <a-sphere position="0.3 1.3 0.8" radius="0.15" color="#fff"></a-sphere>
+                    <!-- Back Stitches -->
+                    <a-box position="0 0 -0.8" width="0.08" height="2" depth="0.05" color="#222"></a-box>
+                
+            </a-scene>
+        `;
+    }
+
+    // --- STEP 4: SEPARATE MOBILE TOUCH JOYSTICK CONTROLS INITIALIZATION ---
+    function initializeJoystickEngine() {
+        const manager = nipplejs.create({
+            zone: joystickZone, mode: 'static',
+            position: { left: '60px', bottom: '60px' },
+            color: 'white', size: 100
+        });
+
+        manager.on('move', (evt, data) => {
+            if (data.vector) {
+                moveX = data.vector.x * speed;
+                moveZ = -data.vector.y * speed; 
+            }
+        });
+        manager.on('end', () => { moveX = 0; moveZ = 0; });
+    }
+
+    // --- STEP 5: RUNTIME FRAME ANIMATION TICK ENGINE ---
     function tick() {
-        if (!gameActive) {
-            requestAnimationFrame(tick);
-            return;
-        }
+        if (!mainLoopRunning) return;
 
-        if (moveX !== 0 || moveZ !== 0) {
+        const player = document.querySelector('#player');
+        const gombo = document.querySelector('#gombo');
+        const zoyi = document.querySelector('#zoyibird');
+        const eggScore = document.getElementById('egg-score');
+        const uiOverlay = document.getElementById('ui-overlay');
+
+        if (player && (moveX !== 0 || moveZ !== 0)) {
             let position = player.getAttribute('position');
             let cameraEntity = player.querySelector('[camera]');
             let rotation = cameraEntity ? cameraEntity.getAttribute('rotation') : {y: 0};
@@ -94,51 +148,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        let playerPos = player.getAttribute('position');
+        if (player) {
+            let playerPos = player.getAttribute('position');
 
-        // Eggs Interactivity Tracking Framework
-        document.querySelectorAll('.egg').forEach(egg => {
-            let eggPos = egg.getAttribute('position');
-            let dist = Math.sqrt(Math.pow(playerPos.x - eggPos.x, 2) + Math.pow(playerPos.z - eggPos.z, 2));
-            if (dist < 1.6) {
-                egg.parentNode.removeChild(egg);
-                eggsHandheld++;
-                if (eggScore) eggScore.innerText = eggsHandheld;
-                uiOverlay.innerText = `Eggs Handheld: ${eggsHandheld}/7. Feed Zoyi Bird!`;
-            }
-        });
+            // Pick up Eggs
+            document.querySelectorAll('.egg').forEach(egg => {
+                let eggPos = egg.getAttribute('position');
+                let dist = Math.sqrt(Math.pow(playerPos.x - eggPos.x, 2) + Math.pow(playerPos.z - eggPos.z, 2));
+                if (dist < 1.6) {
+                    egg.parentNode.removeChild(egg);
+                    eggsHandheld++;
+                    if (eggScore) eggScore.innerText = eggsHandheld;
+                }
+            });
 
-        // Deliver Action Check Context
-        let zoyiPos = zoyi.getAttribute('position');
-        let zoyiDist = Math.sqrt(Math.pow(playerPos.x - zoyiPos.x, 2) + Math.pow(playerPos.z - zoyiPos.z, 2));
-
-        if (zoyiDist < 2.5 && eggsHandheld > 0 && !zoyiIsChasing) {
-            eggsFed += eggsHandheld;
-            eggsHandheld = 0;
-            if (eggScore) eggScore.innerText = eggsFed;
-            
-            if (eggsFed >= 7) {
-                zoyiIsChasing = true;
-                emergencyBtn.style.display = "block";
-                uiOverlay.innerHTML = "<span style='color:#ff941a;'>ZOYI IS ANGRY! RUN TO EMERGENCY BUTTON!</span>";
-            }
-        }
-
-        if (zoyiIsChasing && !zoyiFell) {
-            let zdx = playerPos.x - zoyiPos.x;
-            let zdz = playerPos.z - zoyiPos.z;
-            let distance = Math.sqrt(zdx*zdx + zdz*zdz);
-            
-            zoyiPos.x += (zdx / distance) * 0.055;
-            zoyiPos.z += (zdz / distance) * 0.055;
-            zoyi.setAttribute('position', zoyiPos);
-
-            if(distance < 1.5) {
-                uiOverlay.innerHTML = "<span style='color:red;'>GAME OVER: ZOYI CAUGHT YOU!</span>";
+            // Gombo AI tracking loop
+            if (gombo) {
+                let gomboPos = gombo.getAttribute('position');
+                let gdx = playerPos.x - gomboPos.x;
+                let gdz = playerPos.z - gomboPos.z;
+                let gomboDist = Math.sqrt(gdx * gdx + gdz * gdz);
+                if (gomboDist > 2.0) {
+                    gomboPos.x += (gdx / gomboDist) * 0.02;
+                    gomboPos.z += (gdz / gomboDist) * 0.02;
+                    gombo.setAttribute('position', gomboPos);
+                }
             }
         }
 
         requestAnimationFrame(tick);
     }
-    tick();
 });

@@ -5,47 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Include A-Frame library -->
     <script src="https://aframe.io"></script>
-    <!-- Include Nipple.js for mobile on-screen joysticks -->
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
     <a-scene id="gameScene">
-        <!-- Dark Atmosphere -->
-        <a-sky color="#050510"></a-sky>
-        <a-ambient-light color="#222"></a-ambient-light>
+        <a-sky color="#020205"></a-sky>
+        <a-ambient-light color="#444"></a-ambient-light>
         
-        <!-- Player Camera Entity (Controlled by Joystick) -->
+        <!-- Player Setup -->
         
             
-                <!-- Flashlight -->
-                <a-light type="spot" color="#fff" intensity="1.5" distance="15" angle="30" position="0 0 0"></a-light>
-                <a-cursor color="#fff"></a-cursor>
+                <a-light type="spot" color="#fff" intensity="2.0" distance="20" angle="35"></a-light>
+                <a-cursor color="#ff0000" scale="0.5 0.5 0.5"></a-cursor>
             
         
 
-        <!-- Environment -->
-        <a-plane position="0 0 0" rotation="-90 0 0" width="40" height="40" color="#1c1c1c"></a-plane>
+        <!-- Daycare Floor -->
+        <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#22252c"></a-plane>
         
-        <!-- Room Walls -->
-        <a-box position="0 2 -20" width="40" height="4" depth="1" color="#4A2E80"></a-box>
-        <a-box position="0 2 20" width="40" height="4" depth="1" color="#4A2E80"></a-box>
-        <a-box position="-20 2 0" width="1" height="4" depth="40" color="#4A2E80"></a-box>
-        <a-box position="20 2 0" width="1" height="4" depth="40" color="#4A2E80"></a-box>
+        <!-- Outer Boundary Walls -->
+        <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#3f2b1d"></a-box>
+        <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#3f2b1d"></a-box>
+        <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#3f2b1d"></a-box>
+        <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#3f2b1d"></a-box>
 
-        <!-- Mascot: Gombo -->
-        <a-box id="gombo" position="0 1.5 -12" width="2" height="3" depth="2" color="#00ff66">
-            <a-sphere position="-0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
-            <a-sphere position="-0.4 0.8 1.2" radius="0.05" color="#000"></a-sphere>
-            <a-sphere position="0.4 0.8 1.1" radius="0.2" color="#fff"></a-sphere>
-            <a-sphere position="0.4 0.8 1.2" radius="0.05" color="#000"></a-sphere>
-        </a-box>
+        <!-- PLAYGROUND AREA WALLS -->
+        <a-box position="-15 2.5 5" width="1" height="5" depth="30" color="#5c369e"></a-box>
+        <a-box position="15 2.5 5" width="1" height="5" depth="30" color="#5c369e"></a-box>
+        
+        <!-- THE ABYSS / BALL PIT -->
+        <a-plane id="ballpit" position="0 0.05 -15" rotation="-90 0 0" width="16" height="12" color="#115599"></a-plane>
+        <a-box id="pit-edge" position="0 0.5 -9" width="16" height="1" depth="0.5" color="#ffcc00"></a-box>
+
+        <!-- LORE MURALS (Gombolenna, Stinger Mulyn, Captain Riddles) -->
+        <!-- Gombolenna Mural -->
+        <a-plane position="-29.4 2.5 5" rotation="0 90 0" width="6" height="4" color="#ffffff"></a-plane>
+        <a-text value="GOMBOLENNA\n(Mural)" position="-29.3 2.5 5" rotation="0 90 0" color="#aa00aa" align="center" width="8"></a-text>
+        
+        <!-- Stinger Mulyn Mural -->
+        <a-plane position="-29.4 2.5 -5" rotation="0 90 0" width="6" height="4" color="#ff8800"></a-plane>
+        <a-text value="STINGER MULYN\n(Mural)" position="-29.3 2.5 -5" rotation="0 90 0" color="#000" align="center" width="8"></a-text>
+
+        <!-- Captain Riddles Mural -->
+        <a-plane position="29.4 2.5 0" rotation="0 -90 0" width="6" height="4" color="#00ffff"></a-plane>
+        <a-text value="CAPTAIN RIDDLES\n(Mural)" position="29.3 2.5 0" rotation="0 -90 0" color="#000" align="center" width="8"></a-text>
+
+
+        <!-- 7 SCATTERED NEST EGGS FOR ZOYI BIRD -->
+        <a-sphere class="egg" position="-8 0.4 10" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="12 0.4 12" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="-22 0.4 -10" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="22 0.4 -18" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="0 0.4 22" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="-12 0.4 -25" radius="0.4" color="#fffdf0"></a-sphere>
+        <a-sphere class="egg" position="14 0.4 -2" radius="0.4" color="#fffdf0"></a-sphere>
+
+
+        <!-- TRUE MASCOT: GOMBO (7ft Red Hamster-Human Monster) -->
+        
+            <!-- Main 7ft Tall Body -->
+            <a-box width="2" height="3.5" depth="1.8" color="#d62222"></a-box>
+            <!-- Creepy Eyes -->
+            <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+            <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+            <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+            <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+            <!-- Horns -->
+            <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#111" rotation="0 0 15"></a-cone>
+            <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#111" rotation="0 0 -15"></a-cone>
+            <!-- Two Party Hats On Horns -->
+            <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff00" rotation="0 0 15"></a-cone>
+            <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#00ffff" rotation="0 0 -15"></a-cone>
+            <!-- Back Stitches -->
+            <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
+            <a-box position="0 0.5 -0.92" width="0.6" height="0.05" depth="0.05" color="#111"></a-box>
+            <a-box position="0 -0.5 -0.92" width="0.6" height="0.05" depth="0.05" color="#111"></a-box>
+        
+
+
+        <!-- BOSS: ZOYI BIRD (Pinkish-White Giant Bird) -->
+        
+            <a-cone radius-bottom="1.2" height="3" color="#ffdee6" rotation="0 0 0"></a-cone>
+            <!-- Big Open Mouth for Eggs -->
+            <a-box id="zoyi-mouth" position="0 0.8 0.8" width="1.2" height="0.6" depth="0.6" color="#ff9900"></a-box>
+            <!-- Eyes -->
+            <a-sphere position="-0.3 1.3 0.8" radius="0.15" color="#fff"></a-sphere>
+            <a-sphere position="0.3 1.3 0.8" radius="0.15" color="#fff"></a-sphere>
+            <!-- Back Stitches -->
+            <a-box position="0 0 -0.8" width="0.08" height="2" depth="0.05" color="#222"></a-box>
+        
+
     </a-scene>
 
-    <!-- Touch Joystick Zone -->
+    <!-- Emergency Button for Zoyi Abyss Encounter -->
+    <button id="emergency-btn">TAP EMERGENCY BUTTON</button>
+
     <div id="joystick-zone"></div>
-    <div id="ui-overlay">Drag screen to look. Use joystick to move.</div>
+    <div id="ui-overlay">Zoyi Bird Quest: Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
+
+    <!-- Achievement Pop-up UI Element -->
+    <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
 
     <script src="game.js"></script>
 </body>

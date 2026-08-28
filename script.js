@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let zoyiFell = false;
     let gameActive = false;
 
-    // Trigger Game Activation upon user interaction tap event click
-    startBtn.addEventListener('click', () => {
+       // Trigger Game Activation upon touch or click
+    function enterGame() {
         startScreen.style.display = "none";
         gameScene.style.display = "block";
         joystickZone.style.display = "block";
@@ -32,6 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
         }, 100);
+    }
+
+    // Listen for both finger taps (mobile) and normal mouse clicks (desktop)
+    startBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevents iOS double-tap zoom bugs
+        enterGame();
+    });
+
+    startBtn.addEventListener('click', () => {
+        enterGame();
     });
 
     // Mobile Joystick framework mapping definition

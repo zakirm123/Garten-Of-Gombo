@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI Interface Hooks
     const startScreen = document.getElementById('start-screen');
     const newGameBtn = document.getElementById('new-game-btn');
+    const creditsBtn = document.getElementById('credits-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const quitBtn = document.getElementById('quit-btn');
     const introScreen = document.getElementById('intro-screen');
     const mohajushClockBtn = document.getElementById('mohajush-clock-btn');
     const gameStage = document.getElementById('game-stage');
@@ -15,14 +18,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let zoyiFell = false;
     let mainLoopRunning = false;
 
-    // --- STEP 1: CHOOSE NEW GAME ---
+    // --- UNIVERSAL IPAD TOUCH HELPER FUNCTION ---
+    // This safely listens for iPad finger taps and instantly triggers your actions
+    function bindButton(buttonElement, actionFunction) {
+        if (!buttonElement) return;
+        
+        // Listen for mobile touch taps
+        buttonElement.addEventListener('touchend', (e) => {
+            e.preventDefault(); // Stops iPad zoom bugs
+            actionFunction();
+        });
+        
+        // Backup listener for standard desktop clicks
+        buttonElement.addEventListener('click', (e) => {
+            actionFunction();
+        });
+    }
+
+    // --- BUTTON ACTIONS ---
+
+    // 1. New Game Action
     function triggerNewGame() {
         startScreen.style.setProperty('display', 'none', 'important');
         introScreen.style.display = "flex";
     }
 
-    newGameBtn.addEventListener('touchstart', (e) => { e.preventDefault(); triggerNewGame(); });
-    newGameBtn.addEventListener('click', () => { triggerNewGame(); });
+    // 2. Credits Action
+    function showCredits() {
+        alert("GARTEN OF GOMBO - Credits:\n\nCreated by: You!\nMascot Designs: Gombo, Huge Mohajush, Zoyi Bird, Gombolenna, Captain Riddles, Stinger Mulyn.\nBuilt with GitHub & iPad 🚀");
+    }
+
+    // 3. Settings Action
+    function openSettings() {
+        alert("Settings: Controls are optimized for iPad Touchscreens!");
+    }
+
+    // 4. Quit Action
+    function quitGame() {
+        alert("To quit, simply close this browser tab on your iPad!");
+    }
+
+    // --- BIND ALL MENU BUTTONS ---
+    bindButton(newGameBtn, triggerNewGame);
+    bindButton(creditsBtn, showCredits);
+    bindButton(settingsBtn, openSettings);
+    bindButton(quitBtn, quitGame);
+
 
     // --- STEP 2: TAP THE HUGE MOHAJUSH CLOCK ICON TO ADVANCE TIME ---
     function startActiveDaycare() {
@@ -42,8 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.head.appendChild(aframeScript);
     }
 
-    mohajushClockBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startActiveDaycare(); });
-    mohajushClockBtn.addEventListener('click', () => { startActiveDaycare(); });
+    // Bind the Mohajush Clock button using our universal touch helper
+    bindButton(mohajushClockBtn, startActiveDaycare);
+
 
     // --- STEP 3: CONSTRUCT CORE HORROR ENGINE ENVIRONMENT METRICS ---
     function build3DEnvironmentScene() {
@@ -165,17 +207,4 @@ document.addEventListener('DOMContentLoaded', () => {
             // Gombo AI tracking loop
             if (gombo) {
                 let gomboPos = gombo.getAttribute('position');
-                let gdx = playerPos.x - gomboPos.x;
-                let gdz = playerPos.z - gomboPos.z;
-                let gomboDist = Math.sqrt(gdx * gdx + gdz * gdz);
-                if (gomboDist > 2.0) {
-                    gomboPos.x += (gdx / gomboDist) * 0.02;
-                    gomboPos.z += (gdz / gomboDist) * 0.02;
-                    gombo.setAttribute('position', gomboPos);
-                }
-            }
-        }
-
-        requestAnimationFrame(tick);
-    }
-});
+             let gdx = playerPos.x - gomboPos.x;let gdz = playerPos.z - gomboPos.z;let gomboDist = Math.sqrt(gdx * gdx + gdz * gdz);if (gomboDist > 2.0) {gomboPos.x += (gdx / gomboDist) * 0.02;gomboPos.z += (gdz / gomboDist) * 0.02;gombo.setAttribute('position', gomboPos);}}}requestAnimationFrame(tick);}});   

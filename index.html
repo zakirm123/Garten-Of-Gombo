@@ -9,43 +9,46 @@
     <script src="https://cloudflare.com"></script>
 </head>
 <body>
-    <a-scene id="gameScene" renderer="colorManagement: true">
-        <!-- Ambient and Directional backup light so the scene is never pitch black -->
-        <a-sky color="#0c0d14"></a-sky>
-        <a-ambient-light color="#555566"></a-ambient-light>
+    <!-- iOS Interaction Unlock Shield Layer Screen -->
+    <div id="start-screen">
+        <div class="start-box">
+            <h1>GARTEN OF GOMBO</h1>
+            <p>Chapter 1: The Daycare Abyss</p>
+            <button id="start-btn">TAP TO ENTER DAYCARE</button>
+        </div>
+    </div>
+
+    <!-- Active Game Elements Wrapper -->
+    <a-scene id="gameScene" style="display: none;" loading-screen="enabled: false">
+        <a-sky color="#05060f"></a-sky>
+        <a-ambient-light color="#666677"></a-ambient-light>
         
-        
-        <!-- Player & Camera Rig Setup (Positioned clearly inside the map) -->
+        <!-- Player Setup -->
         
             
-                <a-light type="spot" color="#fff" intensity="2.5" distance="25" angle="40" position="0 0 0"></a-light>
+                <a-light type="spot" color="#fff" intensity="2.5" distance="25" angle="45"></a-light>
                 <a-cursor color="#ff0000" scale="0.5 0.5 0.5"></a-cursor>
             
         
 
-        <!-- Daycare Floor Floorboard Grid -->
+        <!-- Floor Grid Layout -->
         <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#3c3f4a"></a-plane>
         
-        <!-- Boundary Walls -->
+        <!-- Perimeter Wall Assets -->
         <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
         <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
         <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
         <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
 
-        <!-- Interior Walls partitions -->
+        <!-- Room Dividers -->
         <a-box position="-15 2.5 5" width="1" height="5" depth="30" color="#6a44b5"></a-box>
         <a-box position="15 2.5 5" width="1" height="5" depth="30" color="#6a44b5"></a-box>
         
-        <!-- Ball Pit Arena -->
+        <!-- Ball Pit -->
         <a-plane id="ballpit" position="0 0.05 -10" rotation="-90 0 0" width="16" height="12" color="#1a66b8"></a-plane>
         <a-box id="pit-edge" position="0 0.5 -4" width="16" height="1" depth="0.5" color="#ffd426"></a-box>
 
-        <!-- Lore Murals -->
-        <a-plane position="-29.4 2.5 5" rotation="0 90 0" width="6" height="4" color="#ffffff"></a-plane>
-        <a-plane position="-29.4 2.5 -5" rotation="0 90 0" width="6" height="4" color="#ff941a"></a-plane>
-        <a-plane position="29.4 2.5 0" rotation="0 -90 0" width="6" height="4" color="#1affff"></a-plane>
-
-        <!-- 7 Target Scattered Eggs -->
+        <!-- Core Target Collectibles -->
         <a-sphere class="egg" position="-5 0.5 8" radius="0.4" color="#fffce6"></a-sphere>
         <a-sphere class="egg" position="8 0.5 10" radius="0.4" color="#fffce6"></a-sphere>
         <a-sphere class="egg" position="-18 0.5 -8" radius="0.4" color="#fffce6"></a-sphere>
@@ -54,24 +57,21 @@
         <a-sphere class="egg" position="-10 0.5 -20" radius="0.4" color="#fffce6"></a-sphere>
         <a-sphere class="egg" position="12 0.5 -2" radius="0.4" color="#fffce6"></a-sphere>
 
-        <!-- Main Character: GOMBO (7ft Red Mascot) -->
+        <!-- GOMBO Mascot Model -->
         
             <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
             <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
             <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
             <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
             <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-            <!-- Horns -->
             <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
             <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
-            <!-- Hats -->
             <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
             <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
-            <!-- Stitches -->
             <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
         
 
-        <!-- Target Character: ZOYI BIRD -->
+        <!-- ZOYI BIRD Model -->
         
             <a-cone radius-bottom="1.2" height="3" color="#ffcbd7"></a-cone>
             <a-box id="zoyi-mouth" position="0 0.8 0.8" width="1.2" height="0.6" depth="0.6" color="#ffaa1a"></a-box>
@@ -83,7 +83,7 @@
 
     <button id="emergency-btn">TAP EMERGENCY BUTTON</button>
     <div id="joystick-zone"></div>
-    <div id="ui-overlay">Zoyi Bird Quest: Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
+    <div id="ui-overlay" style="display:none;">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
     <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
 
     <script src="game.js"></script>

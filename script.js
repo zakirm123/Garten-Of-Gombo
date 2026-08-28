@@ -1,15 +1,16 @@
-window.addEventListener('load', () => {
-    // Make sure elements exist before applying logic
+document.addEventListener('DOMContentLoaded', () => {
+    const startScreen = document.getElementById('start-screen');
+    const startBtn = document.getElementById('start-btn');
+    const gameScene = document.getElementById('gameScene');
+    const joystickZone = document.getElementById('joystick-zone');
+    const uiOverlay = document.getElementById('ui-overlay');
+    
     const player = document.querySelector('#player');
     const gombo = document.querySelector('#gombo');
     const zoyi = document.querySelector('#zoyibird');
-    const joystickZone = document.getElementById('joystick-zone');
     const eggScore = document.getElementById('egg-score');
-    const uiOverlay = document.getElementById('ui-overlay');
     const emergencyBtn = document.getElementById('emergency-btn');
     const achievement = document.getElementById('achievement-toast');
-
-    if (!player || !gombo || !zoyi || !joystickZone) return;
 
     let moveX = 0, moveZ = 0;
     const speed = 0.12; 
@@ -17,8 +18,23 @@ window.addEventListener('load', () => {
     let eggsFed = 0;
     let zoyiIsChasing = false;
     let zoyiFell = false;
+    let gameActive = false;
 
-    // Mobile Virtual Joystick Setup
+    // Trigger Game Activation upon user interaction tap event click
+    startBtn.addEventListener('click', () => {
+        startScreen.style.display = "none";
+        gameScene.style.display = "block";
+        joystickZone.style.display = "block";
+        uiOverlay.style.display = "block";
+        gameActive = true;
+        
+        // Force full canvas layout resize event check to shake safari Awake
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    });
+
+    // Mobile Joystick framework mapping definition
     const manager = nipplejs.create({
         zone: joystickZone, 
         mode: 'static',
@@ -35,8 +51,7 @@ window.addEventListener('load', () => {
     });
     manager.on('end', () => { moveX = 0; moveZ = 0; });
 
-    emergencyBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    emergencyBtn.addEventListener('click', (e) => {
         if(zoyiIsChasing && !zoyiFell) {
             zoyiFell = true;
             zoyiIsChasing = false;
@@ -49,6 +64,11 @@ window.addEventListener('load', () => {
     });
 
     function tick() {
+        if (!gameActive) {
+            requestAnimationFrame(tick);
+            return;
+        }
+
         if (moveX !== 0 || moveZ !== 0) {
             let position = player.getAttribute('position');
             let cameraEntity = player.querySelector('[camera]');
@@ -65,7 +85,7 @@ window.addEventListener('load', () => {
 
         let playerPos = player.getAttribute('position');
 
-        // Target Eggs Logic Loop
+        // Eggs Interactivity Tracking Framework
         document.querySelectorAll('.egg').forEach(egg => {
             let eggPos = egg.getAttribute('position');
             let dist = Math.sqrt(Math.pow(playerPos.x - eggPos.x, 2) + Math.pow(playerPos.z - eggPos.z, 2));
@@ -73,11 +93,11 @@ window.addEventListener('load', () => {
                 egg.parentNode.removeChild(egg);
                 eggsHandheld++;
                 if (eggScore) eggScore.innerText = eggsHandheld;
-                uiOverlay.innerText = `Eggs Handheld: ${eggsHandheld}/7. Go to Zoyi Bird's Beak!`;
+                uiOverlay.innerText = `Eggs Handheld: ${eggsHandheld}/7. Feed Zoyi Bird!`;
             }
         });
 
-        // Interactive feeding logic 
+        // Deliver Action Check Context
         let zoyiPos = zoyi.getAttribute('position');
         let zoyiDist = Math.sqrt(Math.pow(playerPos.x - zoyiPos.x, 2) + Math.pow(playerPos.z - zoyiPos.z, 2));
 
@@ -89,7 +109,7 @@ window.addEventListener('load', () => {
             if (eggsFed >= 7) {
                 zoyiIsChasing = true;
                 emergencyBtn.style.display = "block";
-                uiOverlay.innerHTML = "<span style='color:#ff941a;'>ZOYI IS ANGRY! HEAD TO THE EMERGENCY BUTTON!</span>";
+                uiOverlay.innerHTML = "<span style='color:#ff941a;'>ZOYI IS ANGRY! RUN TO EMERGENCY BUTTON!</span>";
             }
         }
 

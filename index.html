@@ -4,85 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
-    
-    <!-- 📦 SECURE PRELOAD LIBRARIES -->
-    <script src="https://aframe.io"></script>
-    <script src="https://cloudflare.com"></script>
-    
     <style>
         body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
         #menu, #intro { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:99; color:white; background:#4a3425; text-align:center; }
-        #intro { background:#000; display:none; padding:20px; }
-        h1 { color:#e62e2e; font-size:32px; margin:0 0 20px 0; text-shadow: 2px 2px 0px #000; }
-        button { background:#111; color:white; border:3px solid #e62e2e; padding:12px 30px; font-weight:bold; font-size:16px; margin:8px; border-radius:5px; position: relative; z-index:10; cursor:pointer; }
-        
-        .mural-wall {
-            width: 85%;
-            max-width: 450px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            background: #f4edd2;
-            border: 4px dashed #8b5a2b;
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 25px;
-            box-sizing: border-box;
-        }
-        .drawing { border: 1px solid #ccc; background: #fff; font-size: 10px; font-weight: bold; text-align: center; padding: 4px 2px; box-shadow: 2px 2px 4px rgba(0,0,0,0.15); }
-        .gombo-draw { color: #d62222; transform: rotate(-2deg); }
-        .mohajush-draw { color: #1a7f1a; transform: rotate(2deg); }
-        .zoyi-draw { color: #ff69b4; transform: rotate(-3deg); }
-        .lenna-draw { color: #a020f0; transform: rotate(1deg); }
-        .riddles-draw { color: #00ced1; transform: rotate(-1deg); }
-        .mulyn-draw { color: #ff8c00; transform: rotate(3deg); }
-
-        #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; cursor:pointer; position: relative; z-index:20; }
-        
-        #game-stage { display:none; width:100%; height:100%; position:absolute; top:0; left:0; z-index:50; }
-        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; pointer-events: auto; }
-        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; pointer-events: none; }
-        
-        /* 🛠️ Forces the game frame box to always fill the iPad screen */
-        #canvas-holder { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
+        #intro { background:#000; display:none; padding:20px; box-sizing:border-box; }
+        h1 { color:#e62e2e; font-size:32px; margin-bottom:20px; text-shadow:2px 2px #000; }
+        .mural { width:85%; max-width:400px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; background:#f4edd2; border:4px dashed #8b5a2b; border-radius:8px; padding:6px; margin-bottom:20px; }
+        .draw { border:1px solid #ccc; background:#fff; font-size:9px; font-weight:bold; color:#000; padding:4px 2px; box-shadow:2px 2px 4px rgba(0,0,0,0.15); }
+        button { background:#111; color:white; border:3px solid #e62e2e; padding:12px 30px; font-weight:bold; font-size:16px; margin:8px; border-radius:5px; cursor:pointer; }
+        #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; }
+        #game-stage { display:none; width:100%; height:100%; position:relative; }
+        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; }
+        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; pointer-events:none; }
+        #canvas-holder { width:100%; height:100%; position:absolute; }
     </style>
 </head>
 <body>
 
     <!-- 1. MAIN MENU SCREEN -->
     <div id="menu">
-        <div class="mural-wall">
-            <div class="drawing gombo-draw">👹<br>GOMBO</div>
-            <div class="drawing mohajush-draw">🦍<br>MOHAJUSH</div>
-            <div class="drawing zoyi-draw">🦩<br>ZOYI BIRD</div>
-            <div class="drawing lenna-draw">👩‍🏫<br>LENNA</div>
-            <div class="drawing riddles-draw">🐒<br>RIDDLES</div>
-            <div class="drawing mulyn-draw">🪼<br>MULYN</div>
+        <div class="mural">
+            <div class="draw" style="color:#d62222;">👹 GOMBO</div>
+            <div class="draw" style="color:#1a7f1a;">🦍 MOHAJUSH</div>
+            <div class="draw" style="color:#ff69b4;">🦩 ZOYI BIRD</div>
+            <div class="draw" style="color:#a020f0;">👩‍🏫 LENNA</div>
+            <div class="draw" style="color:#00ced1;">🐒 RIDDLES</div>
+            <div class="draw" style="color:#ff8c00;">🪼 MULYN</div>
         </div>
         <h1>GARTEN OF GOMBO</h1>
         <button id="new-game">NEW GAME</button>
         <button onclick="alert('Created by: You!\nMascot Designs: Gombo, Huge Mohajush, Zoyi Bird, Gombolenna, Captain Riddles, Stinger Mulyn.\nBuilt with GitHub & iPad 🚀')">CREDITS</button>
     </div>
 
-    <!-- 2. INTRO STORY SCREEN -->
+    <!-- 2. INTRO NARRATIVE OVERLAY -->
     <div id="intro">
         <p style="font-size:18px; max-width:80%; line-height:1.5;">"For a parent looking for their missing child, time is a delicate matter."</p>
         <p style="color:#888; font-size:12px; margin-bottom:25px;">Tap the Mohajush Clock to Advance Time...</p>
         <button id="clock-btn">⏰</button>
     </div>
 
-    <!-- 3. ACTIVE 3D GAME STAGE -->
+    <!-- 3. GAME RUNTIME FIELD -->
     <div id="game-stage">
         <div id="joystick-zone"></div>
-        <div id="ui">Daycare Entered. Find Gombo!</div>
-        
-        <!-- 🛠️ This empty box holds the script-generated 3D canvas -->
+        <div id="ui">Daycare Entered. Explore the rooms and locate Gombo!</div>
         <div id="canvas-holder"></div>
     </div>
 
-    <!-- 🧠 MASTER LOGIC TRACKER -->
     <script>
-        let moveX = 0, moveZ = 0, gameRunning = false;
+        let moveX = 0, moveZ = 0, gameActive = false;
 
         function tap(id, action) {
             const el = document.getElementById(id);
@@ -93,86 +62,83 @@
         }
 
         tap('new-game', () => {
-            document.getElementById('menu').style.display = 'none';
+            document.getElementById('menu').style.setProperty('display', 'none', 'important');
             document.getElementById('intro').style.display = 'flex';
         });
 
-        // 🛠️ Clicking the clock button completely generates the 3D frame from scratch!
         tap('clock-btn', () => {
-            document.getElementById('intro').style.display = 'none';
-            document.getElementById('game-stage').style.display = 'block';
+            document.getElementById('clock-btn').disabled = true;
 
-            // Generate the A-Frame Scene Element
-            const scene = document.createElement('a-scene');
-            scene.setAttribute('embedded', '');
-            scene.setAttribute('loading-screen', 'enabled:false');
-            
-            // Build the exact Daycare Room Layout inside the scene
-            scene.innerHTML = `
-                <a-sky color="#0d0e15"></a-sky>
-                
-                <!-- Super Bright Light systems to guarantee visibility -->
-                
-                
-                
-                
+            // Step 1: Inject 3D engine scripts dynamically *after* menu selection to prevent iPad freeze
+            const af = document.createElement('script');
+            af.src = "https://aframe.io";
+            document.head.appendChild(af);
+
+            af.onload = () => {
+                // Step 2: Inject Mobile Virtual Controller library
+                const nip = document.createElement('script');
+                nip.src = "https://cloudflare.com";
+                document.head.appendChild(nip);
+
+                nip.onload = () => {
+                    document.getElementById('intro').style.setProperty('display', 'none', 'important');
+                    document.getElementById('game-stage').style.display = 'block';
+
+                    // Build the 3D daycare map directly into the DOM container frame
+                    const scene = document.createElement('a-scene');
+                    scene.setAttribute('embedded', '');
+                    scene.setAttribute('loading-screen', 'enabled:false');
+                    scene.innerHTML = `
+                        <a-sky color="#05060f"></a-sky>
+                        
+                        
+                        
+                        <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#3c404d"></a-plane>
+                        <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
+                        <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
+                        <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
+                        <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
+                        
+                        <!-- Room Maze Partitions -->
+                        <a-box position="-12 2.5 4" width="1" height="5" depth="20" color="#5c369e"></a-box>
+                        <a-box position="12 2.5 4" width="1" height="5" depth="20" color="#5c369e"></a-box>
+
+                        <!-- GOMBO (7ft Red, Devil Horns, 2 Party Hats & Back Stitches) -->
+                        
+                            <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                            <a-sphere position="-0.4 1 0.95" radius="0.2" color="#fff"></a-sphere><a-sphere position="-0.4 1 1.05" radius="0.05" color="#000"></a-sphere>
+                            <a-sphere position="0.4 1 0.95" radius="0.2" color="#fff"></a-sphere><a-sphere position="0.4 1 1.05" radius="0.05" color="#000"></a-sphere>
+                            <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                            <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                            <a-cone position="-0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                            <a-cone position="0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                            <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box> <!-- Stitches -->
+                        `;
                     
-                
+                    document.getElementById('canvas-holder').appendChild(scene);
+                    gameActive = true;
 
-                <!-- Daycare Playroom Floor -->
-                <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#545866"></a-plane>
-                
-                <!-- Nursery Boundary Walls -->
-                <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
-                <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
-                <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
-                <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
+                    setTimeout(() => { scene.resize(); window.dispatchEvent(new Event('resize')); }, 100);
 
-                <!-- Mascot Monster: GOMBO (7ft, Red, Devil Horns, 2 Party Hats & Back Stitches) -->
-                
-                    <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
-                    <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                    <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                    <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                    <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                    <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
-                    <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
-                    <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
-                    <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
-                    <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
-                
-            `;
-
-            // Append the scene to the container element
-            document.getElementById('canvas-holder').appendChild(scene);
-            gameRunning = true;
-
-            // Instantly force A-Frame to render viewport dimensions
-            setTimeout(() => {
-                scene.resize();
-                window.dispatchEvent(new Event('resize'));
-            }, 100);
-
-            // Initialize on-screen touch joysticks controls
-            if (typeof nipplejs !== 'undefined') {
-                const nav = nipplejs.create({
-                    zone: document.getElementById('joystick-zone'),
-                    mode: 'static', position: { left: '60px', bottom: '60px' },
-                    color: 'white', size: 100
-                });
-                nav.on('move', (evt, data) => {
-                    if (data.vector) {
-                        moveX = data.vector.x * 0.12;
-                        moveZ = -data.vector.y * 0.12;
-                    }
-                });
-                nav.on('end', () => { moveX = 0; moveZ = 0; });
-            }
+                    // Connect mobile touch joystick data variables
+                    const nav = nipplejs.create({
+                        zone: document.getElementById('joystick-zone'),
+                        mode: 'static', position: { left:'60px', bottom:'60px' }, color:'white', size:100
+                    });
+                    nav.on('move', (evt, data) => {
+                        if (data.vector) {
+                            moveX = data.vector.x * 0.12;
+                            moveZ = -data.vector.y * 0.12;
+                        }
+                    });
+                    nav.on('end', () => { moveX = 0; moveZ = 0; });
+                };
+            };
         });
 
-        // Frame loop calculation loop tracker
+        // 60FPS Game loop frame updating
         function loop() {
-            if (gameRunning) {
+            if (gameActive) {
                 const p = document.querySelector('#player');
                 if (p && (moveX !== 0 || moveZ !== 0)) {
                     let pos = p.getAttribute('position');
@@ -181,7 +147,12 @@
                     let angle = (rot.y * Math.PI) / 180;
                     let cx = pos.x + (moveX * Math.cos(angle) + moveZ * Math.sin(angle));
                     let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
-
-                    if (Math.abs(cx) < 24 && Math.abs(cz) < 24) {
-                        p.setAttribute('position', { x: cx, y: pos.y, z: cz });}}}
-            requestAnimationFrame(loop);}loop();
+                    if (Math.abs(cx) < 28 && Math.abs(cz) < 28) p.setAttribute('position', { x: cx, y: pos.y, z: cz });
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
+</body>
+</html>

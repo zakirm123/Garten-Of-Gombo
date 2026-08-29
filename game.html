@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Garten of Gombo - Daycare</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include the libraries directly inside the clean game canvas -->
+    <script src="https://aframe.io"></script>
+    <script src="https://cloudflare.com"></script>
+</head>
+<body>
+
+    <div id="game-stage" style="display: block;">
+        <div id="joystick-zone"></div>
+        
+        <div id="drone-ui">
+            <button id="drone-summon-btn" class="action-btn">📶 SUMMON DRONE</button>
+            <button id="drone-click-btn" class="action-btn">🎯 COMMAND TARGET</button>
+        </div>
+
+        <div id="quiz-ui-box">
+            <h3>Guess Gombo's Alias Color!</h3>
+            <button class="quiz-btn color-red" id="btn-red">RED</button>
+            <button class="quiz-btn color-blue" id="btn-blue">BLUE</button>
+            <button class="quiz-btn color-green" id="btn-green">GREEN</button>
+        </div>
+
+        <div id="ui-overlay">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
+        <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
+        
+        <a-scene loading-screen="enabled: false">
+            <a-sky color="#05060f"></a-sky>
+            <a-ambient-light color="#777788"></a-ambient-light>
+            
+            
+                
+                    <a-light type="spot" color="#fff" intensity="2.5" distance="25" angle="45"></a-light>
+                    <a-cursor color="#ff0000" scale="0.5 0.5 0.5"></a-cursor>
+                
+            
+
+            <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#3c3f4a"></a-plane>
+            
+            <!-- Room Boundaries -->
+            <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
+            <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#5c3f2e"></a-box>
+            <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
+            <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#5c3f2e"></a-box>
+
+            <!-- Puzzle Target Box -->
+            <a-box id="puzzle-button" position="0 2 -2" width="0.8" height="0.8" depth="0.2" color="#ff0000"></a-box>
+
+            <!-- Player Utility Drone -->
+            
+                <a-box width="0.6" height="0.3" depth="0.6" color="#ffcc00"></a-box>
+                <a-sphere position="0 0 0.3" radius="0.1" color="#fff"></a-sphere>
+            
+
+            <!-- Mascot Character GOMBO (Horns & Stitches) -->
+            
+                <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
+            
+        </a-scene>
+    </div>
+
+    <!-- Separate execution script tracking movement -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let moveX = 0, moveZ = 0;
+            const speed = 0.12;
+            let droneActive = false;
+
+            // Track mobile touchjoystick
+            const manager = nipplejs.create({
+                zone: document.getElementById('joystick-zone'),
+                mode: 'static',
+                position: { left: '60px', bottom: '60px' },
+                color: 'white', size: 100
+            });
+
+            manager.on('move', (evt, data) => {
+                if (data.vector) {
+                    moveX = data.vector.x * speed;
+                    moveZ = -data.vector.y * speed; 
+                }
+            });
+            manager.on('end', () => { moveX = 0; moveZ = 0; });
+
+            // Drone Summons tracking
+            document.getElementById('drone-summon-btn').addEventListener('click', () => {
+                const p = document.querySelector('#player');
+                const d = document.querySelector('#player-drone');
+                if(p && d) {
+                    let pos = p.getAttribute('position');
+                    d.setAttribute('position', {x: pos.x, y: 2.2, z: pos.z - 2});
+                    droneActive = true;
+                }
+            });
+
+            document.getElementById('drone-click-btn').addEventListener('click', () => {
+                const d = document.querySelector('#player-drone');
+                if(d && droneActive) {
+                    d.setAttribute('animation', 'property: position; to: 0 2 -1.5; dur: 1500; easing: easeOutQuad');
+                    setTimeout(() => { document.getElementById('quiz-ui-box').style.display = "block"; }, 1600);
+                }
+            });
+
+            function checkQuizAnswer(color) {
+                if (color === "red") {
+                    document.getElementById('quiz-ui-box').style.display = "none";
+                    alert("CORRECT! Gombo is Red. Path unlocked!");
+                    document.querySelector('#gombo').setAttribute('position', '0 0 -12');
+                } else {
+                    alert("WRONG! Gombo is angry!");
+                }
+            }
+            document.getElementById('btn-red').addEventListener('click', () => checkQuizAnswer('red'));
+            document.getElementById('btn-blue').addEventListener('click', () => checkQuizAnswer('blue'));
+            document.getElementById('btn-green').addEventListener('click', () => checkQuizAnswer('green'));
+
+            function tick() {
+                const player = document.querySelector('#player');
+                if (player && (moveX !== 0 || moveZ !== 0)) {
+                    let pos = player.getAttribute('position');
+                    let cam = player.querySelector('[camera]');
+                    let rot = cam ? cam.getAttribute('rotation') : {y:0};
+                    let angle = (rot.y * Math.PI) / 180;
+                    let cx = pos.x + (moveX * Math.cos(angle) + moveZ * Math.sin(angle));
+                    let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
+                    if (Math.abs(cx) < 28 && Math.abs(cz) < 28) {
+                        player.setAttribute('position', { x: cx, y: pos.y, z: cz });
+                    }
+                }
+                requestAnimationFrame(tick);
+            }
+            tick();
+        });
+    </script>
+</body>
+</html>

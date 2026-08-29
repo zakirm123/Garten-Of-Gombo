@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     
-    <!-- 📦 SECURE LIBRARIES DEFERRED (Pre-loaded safely so iPad doesn't block them) -->
-    <script src="https://aframe.io" defer></script>
-    <script src="https://cloudflare.com" defer></script>
+    <!-- 📦 SECURE LIBRARIES -->
+    <script src="https://aframe.io"></script>
+    <script src="https://cloudflare.com"></script>
     
     <style>
         body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
@@ -38,9 +38,14 @@
         .mulyn-draw { color: #ff8c00; transform: rotate(3deg); }
 
         #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; cursor:pointer; position: relative; z-index:20; }
-        #game-stage { display:none; width:100%; height:100%; position:relative; }
-        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; }
-        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; }
+        
+        /* 🛠️ Fixed layout container to make the 3D scene fully display */
+        #game-stage { display:none; width:100%; height:100%; position:absolute; top:0; left:0; z-index:50; }
+        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; pointer-events: auto; }
+        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; pointer-events: none; }
+        
+        /* Ensure canvas fills screen perfectly */
+        a-scene { width: 100% !important; height: 100% !important; display: block; }
     </style>
 </head>
 <body>
@@ -72,22 +77,26 @@
         <div id="joystick-zone"></div>
         <div id="ui">Daycare Entered. Find Gombo!</div>
         
-        <!-- The 3D Scene is pre-baked here, but wrapped inside game-stage which is set to display:none -->
-        <a-scene embedded loading-screen="enabled:false" style="width:100%; height:100%;">
+        <!-- 🛠️ Embedded tag forces iPad to render objects immediately on display state change -->
+        <a-scene embedded loading-screen="enabled:false">
             <a-sky color="#05060f"></a-sky>
-            <a-ambient-light color="#888"></a-ambient-light>
+            
+            <!-- Bright fallback ambient and directional light systems so it isn't black -->
+            <a-ambient-light color="#aaaaaa"></a-ambient-light>
+            
             
             
                 
-                    <a-light type="spot" color="#fff" intensity="2" distance="20"></a-light>
+                    <a-light type="spot" color="#fff" intensity="2" distance="25" angle="45"></a-light>
                 
             
 
-            <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#3c3f4a"></a-plane>
-            <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#5c3f2e"></a-box>
-            <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#5c3f2e"></a-box>
-            <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#5c3f2e"></a-box>
-            <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#5c3f2e"></a-box>
+            <!-- Bright grid floor and visible test wall structures -->
+            <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#3a3d40"></a-plane>
+            <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#8b4513"></a-box>
+            <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#8b4513"></a-box>
+            <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#8b4513"></a-box>
+            <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#8b4513"></a-box>
 
             <!-- Mascot: GOMBO (7ft Red Hamster-Human, Horns & Back Stitches) -->
             
@@ -122,16 +131,19 @@
             document.getElementById('intro').style.display = 'flex';
         });
 
-        // This function wakes up the preloaded canvas instantly on iPad!
         tap('clock-btn', () => {
             document.getElementById('intro').style.display = 'none';
             document.getElementById('game-stage').style.display = 'block';
             gameRunning = true;
 
-            // Shake the iPad browser awake to display 3D dimensions correctly
-            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
+            // 🛠️ Instantly wake up the A-Frame viewport sizes
+            const sceneEl = document.querySelector('a-scene');
+            if (sceneEl) {
+                sceneEl.resize();
+            }
+            window.dispatchEvent(new Event('resize'));
 
-            // Fire up mobile joystick thumbstick rules safely
+            // Initialize thumb stick controls safely
             if (typeof nipplejs !== 'undefined') {
                 const nav = nipplejs.create({
                     zone: document.getElementById('joystick-zone'),
@@ -158,6 +170,7 @@
                     let angle = (rot.y * Math.PI) / 180;
                     let cx = pos.x + (moveX * Math.cos(angle) + moveZ * Math.sin(angle));
                     let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
+
                     if (Math.abs(cx) < 24 && Math.abs(cz) < 24) {
                         p.setAttribute('position', { x: cx, y: pos.y, z: cz });
                     }

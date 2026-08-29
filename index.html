@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
     <!-- 1. MAIN TITLE ENTRY SCREEN -->
-    <div id="start-screen">
+    <div id="start-screen" style="display: flex;">
         <div class="mural-wall">
             <div class="drawing gombo-draw">👹<br>GOMBO</div>
             <div class="drawing mohajush-draw">🦍<br>HUGE MOHAJUSH</div>
@@ -23,44 +22,22 @@
         <div class="menu-box">
             <h1>GARTEN OF GOMBO</h1>
             <div class="btn-group">
-                <!-- Direct inline commands ensure instant execution on iPad -->
-                <button class="menu-btn" id="new-game-btn" onclick="window.GomboEngine.triggerNewGame()" ontouchstart="window.GomboEngine.triggerNewGame()">NEW GAME</button>
+                <button class="menu-btn" id="new-game-btn">NEW GAME</button>
                 <button class="menu-btn" id="continue-btn" disabled>CONTINUE GAME</button>
-                <button class="menu-btn" id="settings-btn" onclick="window.GomboEngine.showSettings()" ontouchstart="window.GomboEngine.showSettings()">SETTINGS</button>
-                <button class="menu-btn" id="credits-btn" onclick="window.GomboEngine.showCredits()" ontouchstart="window.GomboEngine.showCredits()">CREDITS</button>
-                <button class="menu-btn" id="quit-btn" onclick="window.GomboEngine.showQuit()" ontouchstart="window.GomboEngine.showQuit()">QUIT</button>
+                <button class="menu-btn" id="settings-btn">SETTINGS</button>
+                <button class="menu-btn" id="credits-btn">CREDITS</button>
+                <button class="menu-btn" id="quit-btn">QUIT</button>
             </div>
         </div>
     </div>
 
     <!-- 2. NARRATIVE TEXT PROMPT OVERLAY -->
-    <div id="intro-screen">
+    <div id="intro-screen" style="display: none;">
         <div class="intro-textbox">
             <p id="intro-text">"For a parent looking for their missing child, time is a delicate matter."</p>
             <div id="clock-prompt">Tap the Mohajush Clock to Advance Time...</div>
         </div>
-        <button id="mohajush-clock-btn" onclick="window.GomboEngine.startActiveDaycare()" ontouchstart="window.GomboEngine.startActiveDaycare()">⏰<br><span>MOHAJUSH</span></button>
-    </div>
-
-    <!-- 3. ACTUAL GAME LAYOUT CONTAINMENT LAYER -->
-    <div id="game-stage">
-        <div id="joystick-zone"></div>
-        
-        <div id="drone-ui">
-            <button id="drone-summon-btn" class="action-btn" onclick="window.GomboEngine.summonDrone()">📶 SUMMON DRONE</button>
-            <button id="drone-click-btn" class="action-btn" onclick="window.GomboEngine.commandDrone()">🎯 COMMAND TARGET</button>
-        </div>
-
-        <div id="quiz-ui-box">
-            <h3>Guess Gombo's Alias Color!</h3>
-            <button class="quiz-btn color-red" onclick="window.GomboEngine.checkQuiz('red')">RED</button>
-            <button class="quiz-btn color-blue" onclick="window.GomboEngine.checkQuiz('blue')">BLUE</button>
-            <button class="quiz-btn color-green" onclick="window.GomboEngine.checkQuiz('green')">GREEN</button>
-        </div>
-
-        <div id="ui-overlay">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
-        <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
-        <div id="renderer-container"></div>
+        <button id="mohajush-clock-btn">⏰<br><span>MOHAJUSH</span></button>
     </div>
 
     <script src="game.js"></script>

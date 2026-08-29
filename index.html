@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
-    <script src="https://cloudflare.com"></script>
-    <script src="https://cloudflare.com"></script>
     <style>
         body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
         #jz { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; }
         #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.85); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; width:80%; max-width:400px; border-radius:4px; pointer-events:none; }
-        #canvas { width:100%; height:100%; position:absolute; }
+        #canvas { width:100%; height:100%; position:absolute; top:0; left:0; z-index:1; }
     </style>
 </head>
 <body>
@@ -19,89 +17,101 @@
     <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Find the Yellow Keycard on the floor!</span></div>
     <canvas id="canvas"></canvas>
 
+    <!-- 📦 Dynamically loaded scripts to guarantee they are ready before execution -->
     <script>
-        let mx = 0, mz = 0, speed = 0.12, hasKey = false, doorOpen = false, bats = 0;
-        const canvas = document.getElementById('canvas'), scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0a0b10);
-        
-        const cam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        cam.position.set(0, 1.6, 25);
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        function loadScript(url, callback) {
+            let script = document.createElement('script');
+            script.src = url;
+            script.onload = callback;
+            document.head.appendChild(script);
+        }
 
-        scene.add(new THREE.AmbientLight(0xffffff, 2.0));
-        let dl = new THREE.DirectionalLight(0xffffff, 1.0); dl.position.set(-2, 4, 2); scene.add(dl);
-
-        // Floor and Boundaries
-        let floor = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshPhongMaterial({color:0x3e414c}));
-        floor.rotation.x = Math.PI/2; scene.add(floor);
-        
-        let wallMat = new THREE.MeshPhongMaterial({color:0x7a4928}), pMat = new THREE.MeshPhongMaterial({color:0x4a2e80});
-        function box(w,h,d,x,y,z,m) { let b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); scene.add(b); return b; }
-        box(60,5,1,0,2.5,-30,wallMat); box(60,5,1,0,2.5,30,wallMat); box(1,5,60,-30,2.5,0,wallMat); box(1,5,60,30,2.5,0,wallMat);
-        
-        // Puzzle Walls and Locked Door
-        box(30,5,1,-15,2.5,18,pMat); box(20,5,1,20,2.5,18,pMat); box(1,5,20,-12,2.5,-15,pMat); box(20,5,1,-22,2.5,-5,pMat);
-        let door = box(10,5,0.8,5,2.5,18,new THREE.MeshPhongMaterial({color:0xcc2222}));
-
-        // Items
-        let key = box(0.8,0.1,0.5,-8,0.1,24,new THREE.MeshBasicMaterial({color:0xffcc00}));
-        let b1 = box(0.4,0.6,0.4,-24,0.3,-20,new THREE.MeshBasicMaterial({color:0x00ff66}));
-        let b2 = box(0.4,0.6,0.4,-16,0.3,-12,new THREE.MeshBasicMaterial({color:0x00ff66}));
-
-        // GOMBO MODEL
-        let gombo = new THREE.Group(), bMat = new THREE.MeshPhongMaterial({color:0xe62e2e}), wMat = new THREE.MeshBasicMaterial({color:0xffffff}), kMat = new THREE.MeshBasicMaterial({color:0x000000});
-        gombo.add(new THREE.Mesh(new THREE.BoxGeometry(2,3.5,1.8), bMat));
-        function eye(x) { let e=new THREE.Mesh(new THREE.SphereGeometry(0.2),wMat); e.position.set(x,1,0.9); let p=new THREE.Mesh(new THREE.SphereGeometry(0.05),kMat); p.position.set(x,1,0.96); gombo.add(e,p); }
-        eye(-0.4); eye(0.4);
-        function horn(x,r) { let h=new THREE.Mesh(new THREE.ConeGeometry(0.15,0.8),new THREE.MeshPhongMaterial({color:0x222222})); h.position.set(x,1.8,0); h.rotation.z=r; gombo.add(h); }
-        horn(-0.7,-0.2); horn(0.7,0.2);
-        function hat(x,r,c) { let t=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.6),new THREE.MeshPhongMaterial({color:c})); t.position.set(x,2.2,0); t.rotation.z=r; gombo.add(t); }
-        hat(-0.75,-0.2,0xffff00); hat(0.75,0.2,0x00ffff);
-        let st = new THREE.Mesh(new THREE.BoxGeometry(0.1,2.5,0.05),kMat); st.position.set(0,0,-0.92); gombo.add(st);
-        gombo.position.set(0,1.75,-10); scene.add(gombo);
-
-        // Joystick Controls
-        window.addEventListener('load', () => {
-            if (typeof nipplejs !== 'undefined') {
-                let nav = nipplejs.create({ zone:document.getElementById('jz'), mode:'static', position:{left:'60px',bottom:'60px'}, color:'white', size:100 });
-                nav.on('move', (evt, data) => { if (data.vector) { mx = data.vector.x * speed; mz = -data.vector.y * speed; } });
-                nav.on('end', () => { mx = 0; mz = 0; });
-            }
+        // Load Three.js first, then load Nipple.js, then start the game engine
+        loadScript("https://cloudflare.com", () => {
+            loadScript("https://cloudflare.com", () => {
+                startGameEngine();
+            });
         });
 
-        // 60FPS Game Loop
-        function loop() {
-            requestAnimationFrame(loop);
-            if (mx !== 0 || mz !== 0) {
-                let nx = cam.position.x + mx, nz = cam.position.z + mz;
-                if (Math.abs(nx) < 28 && Math.abs(nz) < 28) {
-                    if (!doorOpen && nz < 19 && cam.position.z >= 19) { mz = 0; } else { cam.position.x = nx; cam.position.z = nz; }
-                }
-            }
-            // Keycard Task Check
-            if (!hasKey && cam.position.distanceTo(key.position) < 1.8) {
-                scene.remove(key); hasKey = true;
-                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate at the center wall!</span>";
-            }
-            // Door Task Check
-            if (hasKey && !doorOpen && cam.position.distanceTo(door.position) < 3.0) {
-                scene.remove(door); doorOpen = true;
-                document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Go to the Cafeteria (back-left) to find 2 Batteries!</span>";
-            }
-            // Battery Task Check
-            if (doorOpen && bats < 2) {
-                if (b1.parent && cam.position.distanceTo(b1.position) < 1.8) { scene.remove(b1); bats++; }
-                if (b2.parent && cam.position.distanceTo(b2.position) < 1.8) { scene.remove(b2); bats++; }
-                if (bats === 2) {
-                    document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE TOOL UNLOCKED! Coded by Zakir & Tested by Mohamed!</span>";
-                }
-            }
-            renderer.render(scene, cam);
-        }
-        loop();
+        function startGameEngine() {
+            let mx = 0, mz = 0, speed = 0.12, hasKey = false, doorOpen = false, bats = 0;
+            const canvas = document.getElementById('canvas'), scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0b10);
+            
+            const cam = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            cam.position.set(0, 1.6, 25);
+            
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
 
-        window.addEventListener('resize', () => { cam.aspect = window.innerWidth/window.innerHeight; cam.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            scene.add(new THREE.AmbientLight(0xffffff, 2.0));
+            let dl = new THREE.DirectionalLight(0xffffff, 1.0); dl.position.set(-2, 4, 2); scene.add(dl);
+
+            // Floorboards
+            let floor = new THREE.Mesh(new THREE.PlaneGeometry(60,60), new THREE.MeshPhongMaterial({color:0x3e414c}));
+            floor.rotation.x = Math.PI / 2; scene.add(floor);
+            
+            let wallMat = new THREE.MeshPhongMaterial({color:0x7a4928}), pMat = new THREE.MeshPhongMaterial({color:0x4a2e80});
+            function box(w,h,d,x,y,z,m) { let b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); b.position.set(x,y,z); scene.add(b); return b; }
+            
+            // Outer Borders
+            box(60,5,1,0,2.5,-30,wallMat); box(60,5,1,0,2.5,30,wallMat); box(1,5,60,-30,2.5,0,wallMat); box(1,5,60,30,2.5,0,wallMat);
+            
+            // Nursery Walls and Locked Gates
+            box(30,5,1,-15,2.5,18,pMat); box(20,5,1,20,2.5,18,pMat); box(1,5,20,-12,2.5,-15,pMat); box(20,5,1,-22,2.5,-5,pMat);
+            let door = box(10,5,0.8,5,2.5,18,new THREE.MeshPhongMaterial({color:0xcc2222}));
+
+            // Item Assets
+            let key = box(0.8,0.1,0.5,-8,0.1,24,new THREE.MeshBasicMaterial({color:0xffcc00}));
+            let b1 = box(0.4,0.6,0.4,-24,0.3,-20,new THREE.MeshBasicMaterial({color:0x00ff66}));
+            let b2 = box(0.4,0.6,0.4,-16,0.3,-12,new THREE.MeshBasicMaterial({color:0x00ff66}));
+
+            // GOMBO MODEL
+            let gombo = new THREE.Group(), bMat = new THREE.MeshPhongMaterial({color:0xe62e2e}), wMat = new THREE.MeshBasicMaterial({color:0xffffff}), kMat = new THREE.MeshBasicMaterial({color:0x000000});
+            gombo.add(new THREE.Mesh(new THREE.BoxGeometry(2,3.5,1.8), bMat));
+            function eye(x) { let e=new THREE.Mesh(new THREE.SphereGeometry(0.2),wMat); e.position.set(x,1,0.9); let p=new THREE.Mesh(new THREE.SphereGeometry(0.05),kMat); p.position.set(x,1,0.96); gombo.add(e,p); }
+            eye(-0.4); eye(0.4);
+            function horn(x,r) { let h=new THREE.Mesh(new THREE.ConeGeometry(0.15,0.8),new THREE.MeshPhongMaterial({color:0x222222})); h.position.set(x,1.8,0); h.rotation.z=r; gombo.add(h); }
+            horn(-0.7,-0.2); horn(0.7,0.2);
+            function hat(x,r,c) { let t=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.6),new THREE.MeshPhongMaterial({color:c})); t.position.set(x,2.2,0); t.rotation.z=r; gombo.add(t); }
+            hat(-0.75,-0.2,0xffff00); hat(0.75,0.2,0x00ffff);
+            let st = new THREE.Mesh(new THREE.BoxGeometry(0.1,2.5,0.05),kMat); st.position.set(0,0,-0.92); gombo.add(st);
+            gombo.position.set(0,1.75,-10); scene.add(gombo);
+
+            // Initialize virtual controller stick
+            let nav = nipplejs.create({ zone:document.getElementById('jz'), mode:'static', position:{left:'60px',bottom:'60px'}, color:'white', size:100 });
+            nav.on('move', (evt, data) => { if (data.vector) { mx = data.vector.x * speed; mz = -data.vector.y * speed; } });
+            nav.on('end', () => { mx = 0; mz = 0; });
+
+            function loop() {
+                requestAnimationFrame(loop);
+                if (mx !== 0 || mz !== 0) {
+                    let nx = cam.position.x + mx, nz = cam.position.z + mz;
+                    if (Math.abs(nx) < 28 && Math.abs(nz) < 28) {
+                        if (!doorOpen && nz < 19 && cam.position.z >= 19) { mz = 0; } else { cam.position.x = nx; cam.position.z = nz; }
+                    }
+                }
+                if (!hasKey && cam.position.distanceTo(key.position) < 1.8) {
+                    scene.remove(key); hasKey = true;
+                    document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate at the center wall!</span>";
+                }
+                if (hasKey && !doorOpen && cam.position.distanceTo(door.position) < 3.0) {
+                    scene.remove(door); doorOpen = true;
+                    document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Go to the Cafeteria (back-left) to find 2 Batteries!</span>";
+                }
+                if (doorOpen && bats < 2) {
+                    if (b1.parent && cam.position.distanceTo(b1.position) < 1.8) { scene.remove(b1); bats++; }
+                    if (b2.parent && cam.position.distanceTo(b2.position) < 1.8) { scene.remove(b2); bats++; }
+                    if (bats === 2) {
+                        document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed!</span>";
+                    }
+                }
+                renderer.render(scene, cam);
+            }
+            loop();
+
+            window.addEventListener('resize', () => { cam.aspect = window.innerWidth/window.innerHeight; cam.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        }
     </script>
 </body>
 </html>

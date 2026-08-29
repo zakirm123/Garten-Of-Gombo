@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     
-    <!-- 📦 SECURE LIBRARIES -->
+    <!-- 📦 SECURE PRELOAD LIBRARIES -->
     <script src="https://aframe.io"></script>
     <script src="https://cloudflare.com"></script>
     
@@ -39,13 +39,12 @@
 
         #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; cursor:pointer; position: relative; z-index:20; }
         
-        /* 🛠️ Fixed layout container to make the 3D scene fully display */
         #game-stage { display:none; width:100%; height:100%; position:absolute; top:0; left:0; z-index:50; }
         #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; pointer-events: auto; }
         #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; pointer-events: none; }
         
-        /* Ensure canvas fills screen perfectly */
-        a-scene { width: 100% !important; height: 100% !important; display: block; }
+        /* 🛠️ Forces the game frame box to always fill the iPad screen */
+        #canvas-holder { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; }
     </style>
 </head>
 <body>
@@ -77,45 +76,11 @@
         <div id="joystick-zone"></div>
         <div id="ui">Daycare Entered. Find Gombo!</div>
         
-                    // Inject the 3D Map with fixed, bright iOS lighting variables
-            document.getElementById('3d-container').innerHTML = `
-                <a-scene embedded loading-screen="enabled:false" style="width:100%; height:100%;">
-                    <a-sky color="#0d0e15"></a-sky>
-                    
-                    <!-- 💡 FIXED LIGHTING: Bright white lighting setup that forces iPad to show shapes -->
-                    
-                    
-                    
-                    
-                        
-                    
+        <!-- 🛠️ This empty box holds the script-generated 3D canvas -->
+        <div id="canvas-holder"></div>
+    </div>
 
-                    <!-- Visible bright colored floor layout grid -->
-                    <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#4a4d5a"></a-plane>
-                    
-                    <!-- Daycare Border Walls -->
-                    <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
-                    <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
-                    <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
-                    <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
-
-                    <!-- Mascot: GOMBO (7ft Red Hamster-Human, Horns, 2 Party hats & Stitches) -->
-                    
-                        <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
-                        <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                        <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                        <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                        <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                        <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
-                        <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
-                        <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
-                        <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
-                        <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
-                    
-                </a-scene>`;
-
-
-    <!-- 🧠 GAME JAVASCRIPT MASTER CODE -->
+    <!-- 🧠 MASTER LOGIC TRACKER -->
     <script>
         let moveX = 0, moveZ = 0, gameRunning = false;
 
@@ -132,19 +97,63 @@
             document.getElementById('intro').style.display = 'flex';
         });
 
+        // 🛠️ Clicking the clock button completely generates the 3D frame from scratch!
         tap('clock-btn', () => {
             document.getElementById('intro').style.display = 'none';
             document.getElementById('game-stage').style.display = 'block';
+
+            // Generate the A-Frame Scene Element
+            const scene = document.createElement('a-scene');
+            scene.setAttribute('embedded', '');
+            scene.setAttribute('loading-screen', 'enabled:false');
+            
+            // Build the exact Daycare Room Layout inside the scene
+            scene.innerHTML = `
+                <a-sky color="#0d0e15"></a-sky>
+                
+                <!-- Super Bright Light systems to guarantee visibility -->
+                
+                
+                
+                
+                    
+                
+
+                <!-- Daycare Playroom Floor -->
+                <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#545866"></a-plane>
+                
+                <!-- Nursery Boundary Walls -->
+                <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
+                <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#8b5a2b"></a-box>
+                <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
+                <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#8b5a2b"></a-box>
+
+                <!-- Mascot Monster: GOMBO (7ft, Red, Devil Horns, 2 Party Hats & Back Stitches) -->
+                
+                    <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                    <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                    <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                    <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
+                
+            `;
+
+            // Append the scene to the container element
+            document.getElementById('canvas-holder').appendChild(scene);
             gameRunning = true;
 
-            // 🛠️ Instantly wake up the A-Frame viewport sizes
-            const sceneEl = document.querySelector('a-scene');
-            if (sceneEl) {
-                sceneEl.resize();
-            }
-            window.dispatchEvent(new Event('resize'));
+            // Instantly force A-Frame to render viewport dimensions
+            setTimeout(() => {
+                scene.resize();
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
 
-            // Initialize thumb stick controls safely
+            // Initialize on-screen touch joysticks controls
             if (typeof nipplejs !== 'undefined') {
                 const nav = nipplejs.create({
                     zone: document.getElementById('joystick-zone'),
@@ -161,6 +170,7 @@
             }
         });
 
+        // Frame loop calculation loop tracker
         function loop() {
             if (gameRunning) {
                 const p = document.querySelector('#player');
@@ -173,13 +183,5 @@
                     let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
 
                     if (Math.abs(cx) < 24 && Math.abs(cz) < 24) {
-                        p.setAttribute('position', { x: cx, y: pos.y, z: cz });
-                    }
-                }
-            }
-            requestAnimationFrame(loop);
-        }
-        loop();
-    </script>
-</body>
-</html>
+                        p.setAttribute('position', { x: cx, y: pos.y, z: cz });}}}
+            requestAnimationFrame(loop);}loop();

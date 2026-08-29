@@ -4,42 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://aframe.io"></script>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: monospace; user-select: none; -webkit-user-select: none; }
+        #menu, #intro { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 99; color: white; background: #4a3425; text-align: center; }
+        #intro { background: #000; display: none; padding: 20px; box-sizing: border-box; }
+        h1 { color: #e62e2e; font-size: 32px; margin-bottom: 20px; }
+        button { background: #111; color: white; border: 3px solid #e62e2e; padding: 12px 30px; font-weight: bold; border-radius: 5px; margin: 10px; font-size: 16px; }
+        #clock-btn { background: #1a7f1a; border-radius: 50%; width: 100px; height: 100px; font-size: 24px; box-shadow: 0 0 15px #1a7f1a; }
+        #game-stage { display: none; width: 100%; height: 100%; }
+        #joystick-zone { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; z-index: 99; }
+        #ui { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.8); padding: 10px; border: 2px solid #d62222; z-index: 99; }
+    </style>
 </head>
 <body>
 
-    <!-- 1. MAIN TITLE ENTRY SCREEN -->
-    <div id="start-screen" style="display: flex;">
-        <div class="mural-wall">
-            <div class="drawing gombo-draw">👹<br>GOMBO</div>
-            <div class="drawing mohajush-draw">🦍<br>HUGE MOHAJUSH</div>
-            <div class="drawing zoyi-draw">🦩<br>ZOYI BIRD</div>
-            <div class="drawing lenna-draw">👩‍🏫<br>GOMBOLENNA</div>
-            <div class="drawing riddles-draw">🐒<br>CAPT. RIDDLES</div>
-            <div class="drawing mulyn-draw">🪼<br>STINGER BULYN</div>
-        </div>
-
-        <div class="menu-box">
-            <h1>GARTEN OF GOMBO</h1>
-            <div class="btn-group">
-                <button class="menu-btn" id="new-game-btn">NEW GAME</button>
-                <button class="menu-btn" id="continue-btn" disabled>CONTINUE GAME</button>
-                <button class="menu-btn" id="settings-btn">SETTINGS</button>
-                <button class="menu-btn" id="credits-btn">CREDITS</button>
-                <button class="menu-btn" id="quit-btn">QUIT</button>
-            </div>
-        </div>
+    <!-- 1. MAIN MENU SCREEN -->
+    <div id="menu">
+        <h1>GARTEN OF GOMBO</h1>
+        <button id="new-game">NEW GAME</button>
+        <button id="credits" onclick="alert('Created by: You!\nMascot Designs: Gombo, Huge Mohajush, Zoyi Bird, Gombolenna, Captain Riddles, Stinger Mulyn.')">CREDITS</button>
     </div>
 
-    <!-- 2. NARRATIVE TEXT PROMPT OVERLAY -->
-    <div id="intro-screen" style="display: none;">
-        <div class="intro-textbox">
-            <p id="intro-text">"For a parent looking for their missing child, time is a delicate matter."</p>
-            <div id="clock-prompt">Tap the Mohajush Clock to Advance Time...</div>
-        </div>
-        <button id="mohajush-clock-btn">⏰<br><span>MOHAJUSH</span></button>
+    <!-- 2. INTRO NARRATIVE OVERLAY -->
+    <div id="intro">
+        <p style="font-size: 18px; max-width: 80%;">"For a parent looking for their missing child, time is a delicate matter."</p>
+        <p style="color: #888; font-size: 12px;">Tap the Mohajush Clock to Advance Time...</p>
+        <button id="clock-btn">⏰</button>
     </div>
 
-    <script src="game.js"></script>
+    <!-- 3. ACTIVE 3D GAME STAGE -->
+    <div id="game-stage">
+        <div id="joystick-zone"></div>
+        <div id="ui">Daycare Entered. Find Gombo!</div>
+        
+        <a-scene embedded loading-screen="enabled: false">
+            <a-sky color="#05060f"></a-sky>
+            <a-ambient-light color="#888"></a-ambient-light>
+            
+            <!-- Player Camera -->
+            
+                
+                    <a-light type="spot" color="#fff" intensity="2" distance="20"></a-light>
+                
+            
+
+            <!-- Room Flooring & Borders -->
+            <a-plane position="0 0 0" rotation="-90 0 0" width="50" height="50" color="#3c3f4a"></a-plane>
+            <a-box position="0 2.5 -25" width="50" height="5" depth="1" color="#5c3f2e"></a-box>
+            <a-box position="0 2.5 25" width="50" height="5" depth="1" color="#5c3f2e"></a-box>
+            <a-box position="-25 2.5 0" width="1" height="5" depth="50" color="#5c3f2e"></a-box>
+            <a-box position="25 2.5 0" width="1" height="5" depth="50" color="#5c3f2e"></a-box>
+
+            <!-- GOMBO CHARACTER MODEL (7ft, Red, Horns & Stitches) -->
+            
+                <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                <a-cone position="-0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                <a-cone position="0.75 2.2 0" radius-bottom="0.2" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box> <!-- Stitches -->
+            
+        </a-scene>
+    </div>
+
+    <!-- --- STANDALONE INTERACTION CODE --- -->
+    <script>
+        let moveX = 0, moveZ = 0;
+        const speed = 0.12;
+        let gameRunning = false;
+
+        // iPad Unified Touch Helper
+        function tap(id, action) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('click', action);
+            el.addEventListener('touchend', (e) => { e.preventDefault(); action(); });
+        }
+
+        // Navigation Page Transitions
+        tap('new-game', () => {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('intro').style.display = 'flex';
+        });
+
+        tap('clock-btn', () => {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('game-stage').style.display = 'block';
+            gameRunning = true;
+
+            // Instantly tell the 3D map viewport to recalculate screen width
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
+
+            // Turn on Joystick Controls
+            if (typeof nipplejs !== 'undefined') {
+                const nav = nipplejs.create({
+                    zone: document.getElementById('joystick-zone'),
+                    mode: 'static', position: { left: '60px', bottom: '60px' },
+                    color: 'white', size: 100
+                });
+                nav.on('move', (evt, data) => {
+                    if (data.vector) {
+                        moveX = data.vector.x * speed;
+                        moveZ = -data.vector.y * speed;
+                    }
+                });
+                nav.on('end', () => { moveX = 0; moveZ = 0; });
+            }
+        });
+
+        // 60FPS Game Movement Loop
+        function loop() {
+            if (gameRunning) {
+                const p = document.querySelector('#player');
+                if (p && (moveX !== 0 || moveZ !== 0)) {
+                    let pos = p.getAttribute('position');
+                    let cam = p.querySelector('[camera]');
+                    let rot = cam ? cam.getAttribute('rotation') : { y: 0 };
+                    let angle = (rot.y * Math.PI) / 180;
+                    
+                    let cx = pos.x + (moveX * Math.cos(angle) + moveZ * Math.sin(angle));
+                    let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
+
+                    if (Math.abs(cx) < 24 && Math.abs(cz) < 24) {
+                        p.setAttribute('position', { x: cx, y: pos.y, z: cz });
+                    }
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+        loop();
+    </script>
 </body>
 </html>

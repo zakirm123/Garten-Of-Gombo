@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     
-    <!-- 📦 HARD IMMUTABLE PRELOADS (Forces iPad to register the code before loading the layers) -->
+    <!-- Preloading the scripts globally so the iPad has them ready -->
     <script src="https://aframe.io"></script>
     <script src="https://cloudflare.com"></script>
     
@@ -21,12 +21,12 @@
         button { background:#111; color:white; border:3px solid #e62e2e; padding:12px 30px; font-weight:bold; font-size:16px; margin:8px; border-radius:5px; cursor:pointer; position: relative; z-index: 10; }
         #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; position: relative; z-index: 20; }
         
-        /* 🛠️ Pre-Baked Frame Canvas Dimensions Layout Containers */
         #game-stage { display:none; width:100%; height:100%; position:absolute; top:0; left:0; z-index:50; }
-        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; pointer-events: auto; }
-        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; pointer-events:none; width: 80%; max-width: 400px; border-radius: 4px; }
+        #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:999; pointer-events: auto; }
+        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:999; text-align:center; font-size:14px; pointer-events:none; width: 80%; max-width: 400px; border-radius: 4px; }
         
-        a-scene { width: 100% !important; height: 100% !important; display: block; }
+        /* Fixed container that forces the injected canvas to display */
+        #canvas-holder { width: 100%; height: 100%; display: block; position: absolute; top: 0; left: 0; z-index: 1; }
     </style>
 </head>
 <body>
@@ -53,53 +53,17 @@
         <button id="clock-btn">⏰</button>
     </div>
 
-    <!-- 3. NATIVELY PRE-BAKED ACTIVE 3D GAME STAGE -->
+    <!-- 3. ACTIVE GAMESTAGE -->
     <div id="game-stage">
         <div id="joystick-zone"></div>
         <div id="ui">Daycare Entered. Find Gombo!</div>
-        
-        <!-- 🛠️ Scene tag is embedded natively and wakes up instantly on user touch input toggles -->
-        <a-scene embedded loading-screen="enabled:false">
-            <a-sky color="#05060f"></a-sky>
-            
-            <!-- 💡 ULTRA BRIGHT SYSTEM LIGHTS (Forces iPad browser viewport to render visibility colors) -->
-            
-            
-            
-            <!-- Camera Rig Container -->
-            
-                
-            
-
-            <!-- Daycare Playroom Floor Grid Floorboards -->
-            <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#40434f"></a-plane>
-            
-            <!-- Perimeter Boundary Enclosure Partitions -->
-            <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
-            <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
-            <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
-            <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
-
-            <!-- Mascot Character Monster: GOMBO (7ft, Red, Devil Horns, 2 Party Hats & Back Stitches) -->
-            
-                <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
-                <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
-                <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
-                <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
-                <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
-                <a-cone position="-0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
-                <a-cone position="0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
-                <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
-            
-        </a-scene>
+        <div id="canvas-holder"></div>
     </div>
 
-    <!-- 🧠 PERFORMANCE LOGIC RUNTIME SYSTEM -->
+    <!-- 🧠 THE OVERRIDE GRAPHICS INJECTOR -->
     <script>
         let moveX = 0, moveZ = 0, gameActive = false;
-        const walkSpeed = 0.12;
+        const walkSpeed = 0.15;
 
         function tap(id, action) {
             const el = document.getElementById(id);
@@ -114,27 +78,61 @@
             document.getElementById('intro').style.display = 'flex';
         });
 
-        // 🛠️ Instantly wakes up the preloaded canvas block dimensions without network script lag
+        // 🛠️ Clicking the clock physically builds the 3D scene from scratch at runtime
         tap('clock-btn', () => {
             document.getElementById('intro').style.setProperty('display', 'none', 'important');
             document.getElementById('game-stage').style.display = 'block';
+
+            // Create the Scene Element programmatically
+            const scene = document.createElement('a-scene');
+            scene.setAttribute('embedded', '');
+            scene.setAttribute('loading-screen', 'enabled:false');
+            
+            // Build the Daycare Map with bright lighting overrides
+            scene.innerHTML = `
+                <a-sky color="#05060f"></a-sky>
+                
+                <!-- Max intensity lights to force iPad to draw object shadows -->
+                
+                
+                
+                
+                    
+                
+
+                <a-plane position="0 0 0" rotation="-90 0 0" width="60" height="60" color="#474a56"></a-plane>
+                
+                <a-box position="0 2.5 -30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
+                <a-box position="0 2.5 30" width="60" height="5" depth="1" color="#8b5a2b"></a-box>
+                <a-box position="-30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
+                <a-box position="30 2.5 0" width="1" height="5" depth="60" color="#8b5a2b"></a-box>
+
+                <!-- Mascot: GOMBO (7ft, Red, Devil Horns, 2 Party Hats & Back Stitches) -->
+                
+                    <a-box width="2" height="3.5" depth="1.8" color="#e62e2e"></a-box>
+                    <a-sphere position="-0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="-0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-sphere position="0.4 1 1" radius="0.2" color="#fff"></a-sphere>
+                    <a-sphere position="0.4 1 1.1" radius="0.05" color="#000"></a-sphere>
+                    <a-cone position="-0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
+                    <a-cone position="-0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
+                    <a-cone position="0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
+                    <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
+                
+            `;
+
+            // Drop it directly into the active holder element
+            document.getElementById('canvas-holder').appendChild(scene);
             gameActive = true;
 
-            // HARD ACTIVATION ENGINE BOOT: Forces A-Frame to open visible parameters instantly
-            const sceneEl = document.querySelector('a-scene');
-            if (sceneEl) {
-                sceneEl.play(); // Activates render thread calculations
-                sceneEl.resize(); // Recalculates canvas widths
-                
-                const cameraEl = document.getElementById('main-camera');
-                if (cameraEl && cameraEl.components.camera) {
-                    cameraEl.components.camera.camera.aspect = window.innerWidth / window.innerHeight;
-                    cameraEl.components.camera.camera.updateProjectionMatrix();
-                }
-            }
-            window.dispatchEvent(new Event('resize'));
+            // Force immediate dimensions calculation check
+            setTimeout(() => {
+                scene.resize();
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
 
-            // Initialize virtual touchscreen controllers
+            // Initialize mobile touch controller thumbstick loops safely
             if (typeof nipplejs !== 'undefined') {
                 const nav = nipplejs.create({
                     zone: document.getElementById('joystick-zone'),
@@ -172,3 +170,4 @@
         loop();
     </script>
 </body>
+</html>

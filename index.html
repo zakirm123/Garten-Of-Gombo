@@ -5,31 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Garten of Gombo</title>
     
-    <!-- 📦 SECURE NATIVE LIBRARIES (Pre-loaded safely so iPad cannot block them) -->
+    <!-- 📦 SECURE NATIVE LIBRARIES -->
     <script src="https://aframe.io"></script>
     <script src="https://cloudflare.com"></script>
     
     <style>
         body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
         
-        /* Menu Layout Screen Layers */
         #menu, #intro { position:fixed; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:999; color:white; background:#4a3425; text-align:center; }
         #intro { background:#000; display:none; padding:20px; box-sizing:border-box; z-index:1000; }
         
         h1 { color:#e62e2e; font-size:32px; margin-bottom:20px; text-shadow:2px 2px #000; }
         
-        /* 🎨 Character Mural Wall Display */
         .mural { width:85%; max-width:400px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; background:#f4edd2; border:4px dashed #8b5a2b; border-radius:8px; padding:6px; margin-bottom:20px; }
         .draw { border:1px solid #ccc; background:#fff; font-size:9px; font-weight:bold; color:#000; padding:4px 2px; box-shadow:2px 2px 4px rgba(0,0,0,0.15); }
         
         button { background:#111; color:white; border:3px solid #e62e2e; padding:12px 30px; font-weight:bold; font-size:16px; margin:8px; border-radius:5px; cursor:pointer; position: relative; z-index: 10; }
-        
         #clock-btn { background:#1a7f1a; border-radius:50%; width:100px; height:100px; font-size:24px; box-shadow:0 0 15px #1a7f1a; border:3px solid white; position: relative; z-index: 20; }
         
-        /* Gameplay Frame Setup - Kept fully asleep until activated */
+        /* 🛠️ Gameplay Layout Framework Containers */
         #game-stage { display:none; width:100%; height:100%; position:absolute; top:0; left:0; z-index:50; }
         #joystick-zone { position:absolute; bottom:40px; left:40px; width:120px; height:120px; z-index:99; pointer-events: auto; }
-        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; pointer-events:none; }
+        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.8); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; pointer-events:none; width: 80%; max-width: 400px; border-radius: 4px; }
         
         a-scene { width: 100% !important; height: 100% !important; display: block; }
     </style>
@@ -63,15 +60,14 @@
         <div id="joystick-zone"></div>
         <div id="ui">Daycare Entered. Use the joystick to find Gombo!</div>
         
-        <!-- 🛠️ Scene embedded natively and kept fully visible when the parent container opens -->
         <a-scene embedded loading-screen="enabled:false">
-            <a-sky color="#05060f"></a-scene>
+            <a-sky color="#05060f"></a-sky>
             
-            <!-- Super bright ambient lighting to completely defeat black screens -->
+            <!-- 💡 SUPER BRIGHT BASIC LIGHTS (Guarantees objects are fully visible) -->
             
             
             
-            <!-- Camera Player Controller Rig -->
+            <!-- Camera Player Rig with Forced Camera ID -->
             
                 
             
@@ -98,12 +94,12 @@
                 <a-cone position="0.7 1.8 0" radius-bottom="0.15" height="0.8" color="#222" rotation="0 0 -15"></a-cone>
                 <a-cone position="-0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#ffff1a" rotation="0 0 15"></a-cone>
                 <a-cone position="0.75 2.2 0" radius-bottom="0.18" height="0.6" color="#1affff" rotation="0 0 -15"></a-cone>
-                <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box> <!-- Stitches -->
+                <a-box position="0 0 -0.92" width="0.1" height="2.5" depth="0.05" color="#111"></a-box>
             
         </a-scene>
     </div>
 
-    <!-- 🧠 CRASH-PROOF CONTROL INTERACTION SYSTEM -->
+    <!-- 🧠 SYSTEM PERFORMANCE LOGIC TRACKER -->
     <script>
         let moveX = 0, moveZ = 0, gameActive = false;
         const walkSpeed = 0.12;
@@ -116,26 +112,33 @@
             }
         }
 
-        // Action 1: Flip open story intro panel layout card
         tap('new-game', () => {
             document.getElementById('menu').style.setProperty('display', 'none', 'important');
             document.getElementById('intro').style.display = 'flex';
         });
 
-        // Action 2: Wakes up pre-baked components instantly on your iPad display!
+        // Wakes up preloaded canvas layout rules instantly on your iPad display window
         tap('clock-btn', () => {
             document.getElementById('intro').style.setProperty('display', 'none', 'important');
             document.getElementById('game-stage').style.display = 'block';
             gameActive = true;
 
-            // Force layout resize dimensions calculation rules to refresh the canvas view window bounds
+            // 🛠️ HARD FORCE WAKEUP FOR THE 3D ENGINE
             const sceneEl = document.querySelector('a-scene');
             if (sceneEl) {
-                sceneEl.resize();
+                sceneEl.play(); // Forces A-Frame out of background sleep mode
+                sceneEl.resize(); // Forces redraw of floorboards, lights, and objects
+                
+                // Explicitly tell the tracking camera module to anchor its viewport grid layout
+                const cameraEl = document.getElementById('main-camera');
+                if (cameraEl && cameraEl.components.camera) {
+                    cameraEl.components.camera.camera.aspect = window.innerWidth / window.innerHeight;
+                    cameraEl.components.camera.camera.updateProjectionMatrix();
+                }
             }
             window.dispatchEvent(new Event('resize'));
 
-            // Wake up on-screen virtual thumb joystick stick parameters cleanly
+            // Initialize touchscreen thumb joystick controls controller
             if (typeof nipplejs !== 'undefined') {
                 const nav = nipplejs.create({
                     zone: document.getElementById('joystick-zone'),
@@ -151,7 +154,7 @@
             }
         });
 
-        // 60FPS Continuous movement calculation loop ticks
+        // 60FPS Continuous matrix position coordinate tracking updates
         function loop() {
             if (gameActive) {
                 const p = document.querySelector('#player');
@@ -164,12 +167,4 @@
                     let cz = pos.z + (-moveX * Math.sin(angle) + moveZ * Math.cos(angle));
                     if (Math.abs(cx) < 28 && Math.abs(cz) < 28) {
                         p.setAttribute('position', { x: cx, y: pos.y, z: cz });
-                    }
-                }
-            }
-            requestAnimationFrame(loop);
-        }
-        loop();
-    </script>
-</body>
-</html>
+}}}requestAnimationFrame(loop);}loop();

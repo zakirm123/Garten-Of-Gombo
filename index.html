@@ -9,26 +9,26 @@
 </head>
 <body>
 
-    <!-- 1. MAIN TITLE ENTRY SCREEN (Pure HTML/CSS to prevent iPad lockups) -->
+    <!-- 1. MAIN TITLE ENTRY SCREEN -->
     <div id="start-screen">
-        <!-- Nursery Mural Backdrop with Character Drawings -->
         <div class="mural-wall">
             <div class="drawing gombo-draw">👹<br>GOMBO</div>
             <div class="drawing mohajush-draw">🦍<br>HUGE MOHAJUSH</div>
             <div class="drawing zoyi-draw">🦩<br>ZOYI BIRD</div>
             <div class="drawing lenna-draw">👩‍🏫<br>GOMBOLENNA</div>
             <div class="drawing riddles-draw">🐒<br>CAPT. RIDDLES</div>
-            <div class="drawing mulyn-draw">🪼<br>STINGER MULYN</div>
+            <div class="drawing mulyn-draw">🪼<br>STINGER BULYN</div>
         </div>
 
         <div class="menu-box">
             <h1>GARTEN OF GOMBO</h1>
             <div class="btn-group">
-                <button class="menu-btn" id="new-game-btn">NEW GAME</button>
+                <!-- Direct inline commands ensure instant execution on iPad -->
+                <button class="menu-btn" id="new-game-btn" onclick="window.GomboEngine.triggerNewGame()" ontouchstart="window.GomboEngine.triggerNewGame()">NEW GAME</button>
                 <button class="menu-btn" id="continue-btn" disabled>CONTINUE GAME</button>
-                <button class="menu-btn" id="settings-btn">SETTINGS</button>
-                <button class="menu-btn" id="credits-btn">CREDITS</button>
-                <button class="menu-btn" id="quit-btn">QUIT</button>
+                <button class="menu-btn" id="settings-btn" onclick="window.GomboEngine.showSettings()" ontouchstart="window.GomboEngine.showSettings()">SETTINGS</button>
+                <button class="menu-btn" id="credits-btn" onclick="window.GomboEngine.showCredits()" ontouchstart="window.GomboEngine.showCredits()">CREDITS</button>
+                <button class="menu-btn" id="quit-btn" onclick="window.GomboEngine.showQuit()" ontouchstart="window.GomboEngine.showQuit()">QUIT</button>
             </div>
         </div>
     </div>
@@ -39,19 +39,27 @@
             <p id="intro-text">"For a parent looking for their missing child, time is a delicate matter."</p>
             <div id="clock-prompt">Tap the Mohajush Clock to Advance Time...</div>
         </div>
-        <!-- Huge Mohajush Clock Icon Trigger Button -->
-        <button id="mohajush-clock-btn">
-            ⏰<br><span>MOHAJUSH</span>
-        </button>
+        <button id="mohajush-clock-btn" onclick="window.GomboEngine.startActiveDaycare()" ontouchstart="window.GomboEngine.startActiveDaycare()">⏰<br><span>MOHAJUSH</span></button>
     </div>
 
     <!-- 3. ACTUAL GAME LAYOUT CONTAINMENT LAYER -->
     <div id="game-stage">
         <div id="joystick-zone"></div>
-        <div id="ui-overlay">Zoyi Bird Quest: Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
-        <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
         
-        <!-- The 3D Engine Frame is cleanly deferred and containerized -->
+        <div id="drone-ui">
+            <button id="drone-summon-btn" class="action-btn" onclick="window.GomboEngine.summonDrone()">📶 SUMMON DRONE</button>
+            <button id="drone-click-btn" class="action-btn" onclick="window.GomboEngine.commandDrone()">🎯 COMMAND TARGET</button>
+        </div>
+
+        <div id="quiz-ui-box">
+            <h3>Guess Gombo's Alias Color!</h3>
+            <button class="quiz-btn color-red" onclick="window.GomboEngine.checkQuiz('red')">RED</button>
+            <button class="quiz-btn color-blue" onclick="window.GomboEngine.checkQuiz('blue')">BLUE</button>
+            <button class="quiz-btn color-green" onclick="window.GomboEngine.checkQuiz('green')">GREEN</button>
+        </div>
+
+        <div id="ui-overlay">Gather 7 Eggs and Feed Her! Eggs: <span id="egg-score">0</span>/7</div>
+        <div id="achievement-toast">🏆 Achievement Unlocked: Escape, Push Zoyi into the abyss/pit</div>
         <div id="renderer-container"></div>
     </div>
 

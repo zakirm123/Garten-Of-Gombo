@@ -8,101 +8,92 @@
         body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
         #canvas { display:block; width:100vw; height:100vh; }
         #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.85); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:13px; width:80%; max-width:400px; border-radius:4px; pointer-events:none; }
-        #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; }
-        .pad { width:50%; height:100%; position:relative; }
-        .lbl { position:absolute; bottom:30px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:12px; font-weight:bold; }
-        #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; display:block; }
+        #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; }
+        #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; pointer-events:none; }
+        .side { width:50%; height:100%; position:relative; pointer-events:auto; }
+        #jc { position:absolute; bottom:40px; left:40px; width:100px; height:100px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.4); border-radius:50%; }
+        #js { position:absolute; top:35px; left:34px; width:30px; height:30px; background:#e62e2e; border:2px solid #fff; border-radius:50%; }
+        .lbl { position:absolute; bottom:15px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:11px; font-weight:bold; pointer-events:none; }
     </style>
 </head>
 <body>
 
     <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the hall & grab the Yellow Keycard!</span></div>
-    
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
-    <div id="ctrls"><div class="pad" id="m-pad"><div class="lbl">◀ MOVE (SWIPE) ▶</div></div><div class="pad" id="l-pad"><div class="lbl">◀ LOOK (SWIPE) ▶</div></div></div>
+    <div id="ctrls">
+        <div class="side"><div id="jc"><div id="js"></div></div><div class="lbl" style="left:40px; text-align:left;">◀ JOYSTICK TO MOVE</div></div>
+        <div class="side" id="l-pad"><div class="lbl">SWIPE HERE TO LOOK ▶</div></div>
+    </div>
 
     <script>
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         const radar = document.getElementById('radar'), rCtx = radar.getContext('2d');
-        
         function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', res); res();
 
-        let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0;
-        
-        // 🛠️ FIX APPLIED: Map array numbers restored so the engine can draw the 3D walls!
-        let map = [,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
-            [1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
+        let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
+        let map = [,,,,,,,,,,,];
 
-        let key = { x: 5.5, y: 10.0, a: true }, b1 = { x: 2.5, y: 2.5, a: true }, b2 = { x: 9.5, y: 2.5, a: true }, gombo = { x: 6.0, y: 2.5, a: true };
-        let mv = { x: 0, y: 0 }, lk = 0;
+        let key = { x: 5.5, y: 9.5, a: true }, b1 = { x: 2.5, y: 1.5, a: true }, b2 = { x: 9.5, y: 5.5, a: true }, gombo = { x: 5.5, y: 1.5, a: true };
 
-        function pad(id, isM) {
-            const el = document.getElementById(id); let sx = 0, sy = 0;
-            el.addEventListener('touchstart', e => { sx = e.touches.clientX; sy = e.touches.clientY; }, {passive:true});
-            el.addEventListener('touchmove', e => {
-                let dx = e.touches.clientX - sx, dy = e.touches.clientY - sy;
-                if (isM) { mv.x = Math.max(-1, Math.min(1, dx/50)); mv.y = Math.max(-1, Math.min(1, dy/50)); }
-                else { lk = Math.max(-0.04, Math.min(0.04, dx/250)); }
-            }, {passive:true});
-            el.addEventListener('touchend', () => { if (isM) { mv.x = 0; mv.y = 0; } else { lk = 0; } }, {passive:true});
+        // 🕹️ NATIVE TOUCH JOYSTICK LOGIC
+        const jc = document.getElementById('jc'), js = document.getElementById('js');
+        function touchJoy(e) {
+            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches;
+            let jX = t.clientX - (r.left + r.width/2), jY = t.clientY - (r.top + r.height/2);
+            let dist = Math.min(30, Math.hypot(jX, jY)), ang = Math.atan2(jY, jX);
+            let tx = Math.cos(ang) * dist, ty = Math.sin(ang) * dist;
+            js.style.transform = `translate(${tx}px,${ty}px)`; mvY = ty / 30;
         }
-        pad('m-pad', true); pad('l-pad', false);
+        jc.addEventListener('touchstart', touchJoy, {passive:false});
+        jc.addEventListener('touchmove', touchJoy, {passive:false});
+        jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
+
+        // LOOK SWIPE PAD LOGIC
+        const lp = document.getElementById('l-pad'); let sx = 0;
+        lp.addEventListener('touchstart', e => { sx = e.touches.clientX; }, {passive:true});
+        lp.addEventListener('touchmove', e => { lk = Math.max(-0.03, Math.min(0.03, (e.touches.clientX - sx)/150)); }, {passive:true});
+        lp.addEventListener('touchend', () => { lk = 0; }, {passive:true});
 
         function tick() {
             pa += lk;
-            if (mv.y !== 0) {
-                let dx = Math.cos(pa) * (-mv.y) * 0.06, dy = Math.sin(pa) * (-mv.y) * 0.06;
+            if (mvY !== 0) {
+                let dx = Math.cos(pa) * (-mvY) * 0.05, dy = Math.sin(pa) * (-mvY) * 0.05;
                 let nx = px + dx, ny = py + dy;
                 if (map[Math.floor(py)][Math.floor(nx)] === 0 || (map[Math.floor(py)][Math.floor(nx)] === 3 && doorOpen)) px = nx;
                 if (map[Math.floor(ny)][Math.floor(px)] === 0 || (map[Math.floor(ny)][Math.floor(px)] === 3 && doorOpen)) py = ny;
             }
-            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.5) {
+            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) {
                 key.a = false; hasKey = true;
-                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate down the corridor!</span>";
+                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Unlock the center Red Gate!</span>";
             }
-            if (hasKey && !doorOpen && Math.floor(py) === 8) {
-                doorOpen = true; map[8][4]=0; map[8][5]=0; map[8][6]=0; map[8][7]=0;
+            if (hasKey && !doorOpen && Math.floor(py) === 7) {
+                doorOpen = true; map = 0; map = 0;
                 document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
             }
             if (doorOpen && bats < 2) {
-                if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.5) { b1.a = false; bats++; }
-                if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.5) { b2.a = false; bats++; }
+                if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.6) { b1.a = false; bats++; }
+                if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.6) { b2.a = false; bats++; }
                 if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed! 📶</span>";
             }
         }
 
         function drawRadar() {
-            rCtx.clearRect(0, 0, 100, 100);
-            let s = 100 / 12;
+            rCtx.clearRect(0, 0, 100, 100); let s = 100 / 12;
             for (let y = 0; y < 12; y++) {
                 for (let x = 0; x < 12; x++) {
                     if (map[y][x] === 1) { rCtx.fillStyle = '#7a4928'; rCtx.fillRect(x*s, y*s, s, s); }
-                    else if (map[y][x] === 2) { rCtx.fillStyle = '#4a2e80'; rCtx.fillRect(x*s, y*s, s, s); }
                     else if (map[y][x] === 3) { rCtx.fillStyle = '#cc2222'; rCtx.fillRect(x*s, y*s, s, s); }
                 }
             }
             if (key.a) { rCtx.fillStyle = '#ffcc00'; rCtx.beginPath(); rCtx.arc(key.x*s, key.y*s, 3, 0, Math.PI*2); rCtx.fill(); }
-            if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s - 2, gombo.y*s - 2, 5, 5); }
+            if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s-2, gombo.y*s-2, 5, 5); }
             rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
 
         function draw() {
-            tick();
-            drawRadar();
-            
+            tick(); drawRadar();
             let w = canvas.width, h = canvas.height, hh = h/2;
             ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh);
             ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);
@@ -116,16 +107,16 @@
                     if (cx < 0 || cx >= 12 || cy < 0 || cy >= 12) { hit = true; dist = 16; }
                     else if (map[cy][cx] > 0) { hit = true; type = map[cy][cx]; }
                 }
-                let clr = type === 2 ? '#4a2e80' : type === 3 ? '#cc2222' : '#7a4928';
+                let clr = type === 3 ? '#cc2222' : '#7a4928';
                 let wh = Math.min(h, h / (dist * Math.cos(ra - pa)));
                 ctx.fillStyle = clr; ctx.globalAlpha = Math.max(0, 1 - (dist / 14));
                 ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0;
             }
 
             let spr = [];
-            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4, lbl: 'KEY' });
-            if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3, lbl: 'BAT' });
-            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3, lbl: 'BAT' });
+            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 });
+            if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });
+            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 });
             if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
 
             spr.forEach(s => {

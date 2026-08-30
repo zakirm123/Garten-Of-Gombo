@@ -18,7 +18,7 @@
 </head>
 <body>
 
-    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the hall and find the Character Murals!</span></div>
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use joystick to walk down the hall and find the Murals!</span></div>
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
     <div id="ctrls">
@@ -34,24 +34,30 @@
 
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
         
-        // 🗺️ SOLID MATRIX - NO MISSING SPACES (1=Wall, 3=Gate, 4=Mural, 0=Floor)
-        let map = [,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
- ,
-            [1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
+        // 🗺️ STRING MAP OVERRIDE (CRASH-PROOF: 1=Wall, 3=Gate, 4=Mural wall template layout)
+        const mapStr = 
+            "111111111111" +
+            "100000000001" +
+            "101100001101" +
+            "101000000101" +
+            "104000000001" +
+            "101000000101" +
+            "101100001101" +
+            "100000000001" +
+            "111333333111" +
+            "100000000001" +
+            "100000000001" +
+            "111111111111";
+
+        // Convert the clean flat string back into system arrays tracking paths dynamically
+        let map = [];
+        for (let i = 0; i < 12; i++) {
+            map.push(mapStr.substr(i * 12, 12).split("").map(Number));
+        }
 
         let key = { x: 5.5, y: 10.5, a: true }, b1 = { x: 1.5, y: 1.5, a: true }, b2 = { x: 10.5, y: 1.5, a: true }, gombo = { x: 5.5, y: 1.5, a: true };
 
-        // 🕹️ NATIVE TOUCH JOYSTICK CONTROL LOGIC
+        // 🕹️ NATIVE TOUCH CONTROLLER JOYSTICK LOGIC
         const jc = document.getElementById('jc'), js = document.getElementById('js');
         function touchJoy(e) {
             e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches[0];
@@ -64,7 +70,7 @@
         jc.addEventListener('touchmove', touchJoy, {passive:false});
         jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
 
-        // LOOK SWIPE LOGIC
+        // VIEW LOOK SWIPE LAYER
         const lp = document.getElementById('l-pad'); let sx = 0;
         lp.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
         lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches[0].clientX - sx)/120)); }, {passive:true});
@@ -80,11 +86,11 @@
             }
             if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) {
                 key.a = false; hasKey = true;
-                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Security Gate Line!</span>";
+                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Security Gate Line down the hall!</span>";
             }
-            if (hasKey && !doorOpen && Math.floor(py) === 7) {
+            if (hasKey && !doorOpen && Math.floor(py) === 8) {
                 doorOpen = true; 
-                for(let x=3; x<=7; x++) map[7][x] = 0; // Clear the door blocks dynamically
+                for(let x=3; x<=8; x++) map[8][x] = 0; // Wipes out gate block line indices directly
                 document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
             }
             if (doorOpen && bats < 2) {
@@ -108,7 +114,6 @@
             rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
 
-        // 🎨 NATIVE VECTOR ART DRAWINGS FOR THE CHARACTER BANNER (No Emojis!)
         function drawMural(ctx, x, y, w, h, d) {
             ctx.fillStyle = '#f4edd2'; ctx.fillRect(x, y, w, h);
             ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = Math.max(1, 4/d); ctx.strokeRect(x, y, w, h);
@@ -144,14 +149,9 @@
                 }
             }
 
-            // Project Vector Mural wide banner at grid spot (3,3)
-            let sAngle = Math.atan2(3.5 - py, 3.5 - px) - pa;
+            // Project Wide Custom Mural wall texture onto spot (2,4) matching row boundaries definitions
+            let sAngle = Math.atan2(4.5 - py, 2.5 - px) - pa;
             while (sAngle < -Math.PI) sAngle += Math.PI * 2; while (sAngle > Math.PI) sAngle -= Math.PI * 2;
-            let sDist = Math.hypot(3.5 - px, 3.5 - py);
+            let sDist = Math.hypot(2.5 - px, 4.5 - py);
             if (sDist > 0.5 && sDist < 12 && Math.abs(sAngle) < fov) {
-                let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;
-                ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12));
-                drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist);
-             ctx.restore();}
-         let spr = [];if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 });if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 });if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });spr.forEach(s => {let sx = s.o.x - px, sy = s.o.y - py;let sa = Math.atan2(sy, sx) - pa;while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;let sd = Math.hypot(sx, sy);if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {let scx = (w/2) + (Math.tan(sa) * (w/2) / Math.tan(fov/2)), sz = Math.min(h, (h/sd) * s.s);ctx.globalAlpha = Math.max(0, 1 - (sd / 12));if (s.g) {ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);} else {ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill();}ctx.globalAlpha = 1.0;}});requestAnimationFrame(draw);}draw();
-     
+                let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12));drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist);ctx.restore();}let spr = [];if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 });if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 });if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });spr.forEach(s => {let sx = s.o.x - px, sy = s.o.y - py;let sa = Math.atan2(sy, sx) - pa;while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;let sd = Math.hypot(sx, sy);if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {let scx = (w/2) + (Math.tan(sa) * (w/2) / Math.tan(fov/2)), sz = Math.min(h, (h/sd) * s.s);ctx.globalAlpha = Math.max(0, 1 - (sd / 12));if (s.g) {ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);} else {ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill();}ctx.globalAlpha = 1.0;}});requestAnimationFrame(draw);}draw()

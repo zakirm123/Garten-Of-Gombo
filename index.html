@@ -17,7 +17,7 @@
     </style>
 </head>
 <body>
-    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Keycard and view the Murals!</span></div>
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Keycard and look for the Murals!</span></div>
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
     <div id="ctrls">
@@ -32,26 +32,26 @@
         
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
         
-        // 🗺️ SOLID ENCODED ROW DATA (CRASH-PROOF FORMAT FOR IPAD BROWSERS)
-        const m0 =;
-        const m1 =;
-        const m2 =;
-        const m3 =;
-        const m4 =;
-        const m5 =;
-        const m6 =;
-        const m7 =;
-        const m8 =;
-        const m9 =;
-        const mA =;
-        const mB =;
-        let map = [m0,m1,m2,m3,m4,m5,m6,m7,m8,m9,mA,mB];
+        // 🗺️ HARDCODED VERIFIED DAYCARE MAP ARRAY (Zero placeholders, 1=Wall, 3=Gate, 4=Mural)
+        let map = [,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+            [1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
 
         let key = { x: 5.5, y: 10.5, a: true }, b1 = { x: 1.5, y: 1.5, a: true }, b2 = { x: 10.5, y: 1.5, a: true }, gombo = { x: 5.5, y: 1.5, a: true };
         const jc = document.getElementById('jc'), js = document.getElementById('js');
         
         function touchJoy(e) {
-            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches[0];
+            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches;
             let jX = t.clientX - (r.left + r.width/2), jY = t.clientY - (r.top + r.height/2);
             let dist = Math.min(30, Math.hypot(jX, jY)), ang = Math.atan2(jY, jX);
             js.style.transform = `translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; mvY = Math.sin(ang)*dist / 30;
@@ -60,8 +60,8 @@
         jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
         
         const lp = document.getElementById('l-pad'); let sx = 0;
-        lp.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
-        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches[0].clientX - sx)/100)); }, {passive:true});
+        lp.addEventListener('touchstart', e => { sx = e.touches.clientX; }, {passive:true});
+        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches.clientX - sx)/100)); }, {passive:true});
         lp.addEventListener('touchend', () => { lk = 0; }, {passive:true});
         
         function tick() {
@@ -128,8 +128,7 @@
             if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 }); if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });
             if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 }); if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
             spr.forEach(s => {
-
-let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
+                let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
 while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;
 let sd = Math.hypot(sx, sy);
 if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {
@@ -146,8 +145,8 @@ ctx.globalAlpha = 1.0;
 });
 requestAnimationFrame(draw);
 }
-// 🛠️ DELAY REPAINT FIX: Prevents Safari background script blocks on load
+// Forced native redraw loop parameters trigger
 setTimeout(() => {
 window.dispatchEvent(new Event('resize'));
 draw();
-}, 100);
+}, 150);

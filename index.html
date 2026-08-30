@@ -6,100 +6,61 @@
     <title>Garten of Gombo</title>
     <style>
         body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
-        #canvas { display:block; width:100vw; height:100vh; }
+        #canvas { display:block; width:100vw; height:100vh; position:absolute; z-index:1; }
         #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.85); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:13px; width:80%; max-width:400px; border-radius:4px; pointer-events:none; }
-        #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; }
+        #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; pointer-events:none; }
         #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; pointer-events:none; }
-        .side { width:50%; height:100%; position:relative; pointer-events:auto; }
+        .pad { width:50%; height:100%; position:relative; pointer-events:auto; }
         #jc { position:absolute; bottom:40px; left:40px; width:100px; height:100px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.4); border-radius:50%; }
-        #js { position:absolute; top:35px; left:34px; width:30px; height:30px; background:#e62e2e; border:2px solid #fff; border-radius:50%; }
+        #js { position:absolute; top:35px; left:34px; width:30px; height:30px; background:#e62e2e; border:2px solid #fff; border-radius:50%; pointer-events:none; }
         .lbl { position:absolute; bottom:15px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:11px; font-weight:bold; pointer-events:none; }
     </style>
 </head>
 <body>
-
-    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use joystick to walk down the hall and find the Murals!</span></div>
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Keycard and view the Murals!</span></div>
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
     <div id="ctrls">
-        <div class="side"><div id="jc"><div id="js"></div></div><div class="lbl" style="left:40px; text-align:left;">◀ JOYSTICK TO MOVE</div></div>
-        <div class="side" id="l-pad"><div class="lbl">SWIPE HERE TO LOOK ▶</div></div>
+        <div class="pad"><div id="jc"><div id="js"></div></div><div class="lbl" style="text-align:left; left:40px;">◀ JOYSTICK TO MOVE</div></div>
+        <div class="pad" id="l-pad"><div class="lbl">SWIPE HERE TO LOOK ▶</div></div>
     </div>
-
     <script>
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         const radar = document.getElementById('radar'), rCtx = radar.getContext('2d');
         function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', res); res();
-
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
-        
-        // 🗺️ STRING MAP OVERRIDE (CRASH-PROOF: 1=Wall, 3=Gate, 4=Mural wall template layout)
-        const mapStr = 
-            "111111111111" +
-            "100000000001" +
-            "101100001101" +
-            "101000000101" +
-            "104000000001" +
-            "101000000101" +
-            "101100001101" +
-            "100000000001" +
-            "111333333111" +
-            "100000000001" +
-            "100000000001" +
-            "111111111111";
-
-        // Convert the clean flat string back into system arrays tracking paths dynamically
-        let map = [];
-        for (let i = 0; i < 12; i++) {
-            map.push(mapStr.substr(i * 12, 12).split("").map(Number));
-        }
-
+        const mapStr = "111111111111100000000001101100001101101000000101104000000001101000000101101100001101100000000001111333333111100000000001100000000001111111111111";
+        let map = []; for (let i = 0; i < 12; i++) map.push(mapStr.substr(i * 12, 12).split("").map(Number));
         let key = { x: 5.5, y: 10.5, a: true }, b1 = { x: 1.5, y: 1.5, a: true }, b2 = { x: 10.5, y: 1.5, a: true }, gombo = { x: 5.5, y: 1.5, a: true };
-
-        // 🕹️ NATIVE TOUCH CONTROLLER JOYSTICK LOGIC
         const jc = document.getElementById('jc'), js = document.getElementById('js');
         function touchJoy(e) {
-            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches[0];
+            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches;
             let jX = t.clientX - (r.left + r.width/2), jY = t.clientY - (r.top + r.height/2);
             let dist = Math.min(30, Math.hypot(jX, jY)), ang = Math.atan2(jY, jX);
-            let tx = Math.cos(ang) * dist, ty = Math.sin(ang) * dist;
-            js.style.transform = `translate(${tx}px,${ty}px)`; mvY = ty / 30;
+            js.style.transform = `translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; mvY = Math.sin(ang)*dist / 30;
         }
-        jc.addEventListener('touchstart', touchJoy, {passive:false});
-        jc.addEventListener('touchmove', touchJoy, {passive:false});
+        jc.addEventListener('touchstart', touchJoy, {passive:false}); jc.addEventListener('touchmove', touchJoy, {passive:false});
         jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
-
-        // VIEW LOOK SWIPE LAYER
         const lp = document.getElementById('l-pad'); let sx = 0;
-        lp.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
-        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches[0].clientX - sx)/120)); }, {passive:true});
+        lp.addEventListener('touchstart', e => { sx = e.touches.clientX; }, {passive:true});
+        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches.clientX - sx)/100)); }, {passive:true});
         lp.addEventListener('touchend', () => { lk = 0; }, {passive:true});
-
         function tick() {
             pa += lk;
             if (mvY !== 0) {
-                let dx = Math.cos(pa) * (-mvY) * 0.06, dy = Math.sin(pa) * (-mvY) * 0.06;
-                let nx = px + dx, ny = py + dy;
+                let dx = Math.cos(pa)*(-mvY)*0.05, dy = Math.sin(pa)*(-mvY)*0.05, nx = px + dx, ny = py + dy;
                 if (map[Math.floor(py)][Math.floor(nx)] === 0 || (map[Math.floor(py)][Math.floor(nx)] === 3 && doorOpen)) px = nx;
                 if (map[Math.floor(ny)][Math.floor(px)] === 0 || (map[Math.floor(ny)][Math.floor(px)] === 3 && doorOpen)) py = ny;
             }
-            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) {
-                key.a = false; hasKey = true;
-                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Security Gate Line down the hall!</span>";
-            }
-            if (hasKey && !doorOpen && Math.floor(py) === 8) {
-                doorOpen = true; 
-                for(let x=3; x<=8; x++) map[8][x] = 0; // Wipes out gate block line indices directly
-                document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
-            }
+            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) { key.a = false; hasKey = true; document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Unlock the center Red Gate!</span>"; }
+            if (hasKey && !doorOpen && Math.floor(py) === 8) { doorOpen = true; for(let x=3; x<=8; x++) map[x] = 0; document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Find 2 Drone Batteries in side rooms!</span>"; }
             if (doorOpen && bats < 2) {
                 if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.6) { b1.a = false; bats++; }
                 if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.6) { b2.a = false; bats++; }
-                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed! 📶</span>";
+                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Victory! 📶</span>";
             }
         }
-
         function drawRadar() {
             rCtx.clearRect(0, 0, 100, 100); let s = 100 / 12;
             for (let y = 0; y < 12; y++) {
@@ -113,45 +74,47 @@
             if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s-2, gombo.y*s-2, 5, 5); }
             rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
-
         function drawMural(ctx, x, y, w, h, d) {
-            ctx.fillStyle = '#f4edd2'; ctx.fillRect(x, y, w, h);
-            ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = Math.max(1, 4/d); ctx.strokeRect(x, y, w, h);
+            ctx.fillStyle = '#f4edd2'; ctx.fillRect(x, y, w, h); ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = Math.max(1, 4/d); ctx.strokeRect(x, y, w, h);
             let sc = w / 120;
             ctx.fillStyle = '#d62222'; ctx.beginPath(); ctx.arc(x+25*sc, y+40*sc, 12*sc, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#000'; ctx.fillRect(x+18*sc, y+15*sc, 4*sc, 15*sc); ctx.fillRect(x+28*sc, y+15*sc, 4*sc, 15*sc);
+            ctx.fillStyle = '#000'; ctx.fillRect(x+18*sc, y+15*sc, 3*sc, 15*sc); ctx.fillRect(x+29*sc, y+15*sc, 3*sc, 15*sc);
             ctx.fillStyle = '#1a7f1a'; ctx.beginPath(); ctx.arc(x+60*sc, y+40*sc, 15*sc, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = '#ff69b4'; ctx.beginPath(); ctx.arc(x+95*sc, y+35*sc, 10*sc, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#ff8c00'; ctx.fillRect(x+95*sc, y+35*sc, 15*sc, 6*sc);
+            ctx.fillStyle = '#ff8c00'; ctx.fillRect(x+95*sc, y+35*sc, 15*sc, 5*sc);
             ctx.fillStyle = '#000'; ctx.font = Math.max(5, Math.floor(8*sc)) + 'px monospace';
-            ctx.fillText('GOMBO', x+10*sc, y+75*sc); ctx.fillText('MOHAJUSH', x+42*sc, y+75*sc); ctx.fillText('ZOYI', x+85*sc, y+75*sc);
+            ctx.fillText('GOMBO', x+10*sc, y+75*sc); ctx.fillText('MOHAJUSH', x+40*sc, y+75*sc); ctx.fillText('ZOYI', x+85*sc, y+75*sc);
         }
-
         function draw() {
             tick(); drawRadar();
-            let w = canvas.width, h = canvas.height, hh = h/2;
-            ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh);
-            ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);
-
+            let w = window.innerWidth, h = window.innerHeight, hh = h/2;
+            ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh); ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);
             for (let c = 0; c < w; c++) {
-                let ra = (pa - fov/2) + (c / w) * fov, dist = 0, hit = false, type = 0;
-                let cr = Math.cos(ra), sr = Math.sin(ra);
+                let ra = (pa - fov/2) + (c / w) * fov, dist = 0, hit = false, type = 0, cr = Math.cos(ra), sr = Math.sin(ra);
                 while (!hit && dist < 16) {
-                    dist += 0.05;
-                    let cx = Math.floor(px + cr * dist), cy = Math.floor(py + sr * dist);
+                    dist += 0.05; let cx = Math.floor(px + cr * dist), cy = Math.floor(py + sr * dist);
                     if (cx < 0 || cx >= 12 || cy < 0 || cy >= 12) { hit = true; dist = 16; }
                     else if (map[cy][cx] > 0) { hit = true; type = map[cy][cx]; }
                 }
                 let wh = Math.min(h, h / (dist * Math.cos(ra - pa)));
-                if (type !== 4) {
-                    ctx.fillStyle = type === 3 ? '#cc2222' : '#7a4928';
-                    ctx.globalAlpha = Math.max(0, 1 - (dist / 14)); ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0;
-                }
+                if (type !== 4) { ctx.fillStyle = type === 3 ? '#cc2222' : '#7a4928'; ctx.globalAlpha = Math.max(0, 1 - (dist / 14)); ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0; }
             }
-
-            // Project Wide Custom Mural wall texture onto spot (2,4) matching row boundaries definitions
             let sAngle = Math.atan2(4.5 - py, 2.5 - px) - pa;
             while (sAngle < -Math.PI) sAngle += Math.PI * 2; while (sAngle > Math.PI) sAngle -= Math.PI * 2;
             let sDist = Math.hypot(2.5 - px, 4.5 - py);
             if (sDist > 0.5 && sDist < 12 && Math.abs(sAngle) < fov) {
-                let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12));drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist);ctx.restore();}let spr = [];if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 });if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 });if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });spr.forEach(s => {let sx = s.o.x - px, sy = s.o.y - py;let sa = Math.atan2(sy, sx) - pa;while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;let sd = Math.hypot(sx, sy);if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {let scx = (w/2) + (Math.tan(sa) * (w/2) / Math.tan(fov/2)), sz = Math.min(h, (h/sd) * s.s);ctx.globalAlpha = Math.max(0, 1 - (sd / 12));if (s.g) {ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);} else {ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill();}ctx.globalAlpha = 1.0;}});requestAnimationFrame(draw);}draw()
+                let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;
+                ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12)); drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist); ctx.restore();
+            }
+            let spr = [];
+            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 }); if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });
+            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 }); if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
+            spr.forEach(s => {
+                let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
+                while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;
+                let sd = Math.hypot(sx, sy);
+                if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {
+                    let scx = (w/2) + (Math.tan(sa) * (w/2) / Math.tan(fov/2)), sz = Math.min(h, (h/sd) * s.s);
+                    ctx.globalAlpha = Math.max(0, 1 - (sd / 12));
+                    if (s.g) {
+ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);} else { ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill(); }ctx.globalAlpha = 1.0;}});requestAnimationFrame(draw);}draw();

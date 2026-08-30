@@ -6,9 +6,16 @@
     <title>Garten of Gombo</title>
     <style>
         body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
+        
+        /* 🏰 CRASH-PROOF TITLE BOOT SCREEN LAYER */
+        #boot-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#4a3425; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; color:white; text-align:center; }
+        #boot-screen h1 { color:#e62e2e; font-size:32px; text-shadow:3px 3px #000; margin-bottom:10px; }
+        #boot-btn { background:#1a7f1a; color:white; border:3px solid white; padding:15px 40px; font-weight:bold; font-size:18px; border-radius:10px; cursor:pointer; box-shadow:0 0 15px #1a7f1a; }
+        
         #canvas { display:block; width:100vw; height:100vh; position:absolute; z-index:1; }
         #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.85); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:13px; width:80%; max-width:400px; border-radius:4px; pointer-events:none; }
         #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; pointer-events:none; }
+        
         #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; pointer-events:none; }
         .pad { width:50%; height:100%; position:relative; pointer-events:auto; }
         #jc { position:absolute; bottom:40px; left:40px; width:100px; height:100px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.4); border-radius:50%; }
@@ -18,7 +25,14 @@
 </head>
 <body>
 
-    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Yellow Keycard and inspect the Murals!</span></div>
+    <!-- 🚪 EMERGENCY HARD BOOT ENTRY PANEL -->
+    <div id="boot-screen">
+        <h1>GARTEN OF GOMBO</h1>
+        <p style="color:#ffcc00; font-size:12px; margin-bottom:20px;">Zakir & Mohamed Dev Studio — Production Build</p>
+        <button id="boot-btn">ENTER DAYCARE ⏰</button>
+    </div>
+
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the corridor to find the Yellow Keycard!</span></div>
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
     
@@ -31,12 +45,15 @@
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         const radar = document.getElementById('radar'), rCtx = radar.getContext('2d');
         
-        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        function res() { 
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
+            radar.width = 100; radar.height = 100;
+        }
         window.addEventListener('resize', res); res();
         
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
         
-        // 🗺️ 100% FIXED SECURE DATA MATRIX (1=Wall, 3=Gate, 4=Mural Banner)
+        // 🗺️ SOLID IMMUTABLE DATA GRID (1=Wall, 3=Gate, 4=Mural Banner)
         let map = [,
  ,
  ,
@@ -51,18 +68,25 @@
             [1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
-        let key = { x: 5.5, y: 10.5, a: true }, b1 = { x: 1.5, y: 1.5, a: true }, b2 = { x: 10.5, y: 1.5, a: true }, gombo = { x: 5.5, y: 1.5, a: true };
+        // 📶 INJECTING YOUR CUSTOM REMOTE DESIGN (Dark Gray Body, Red Antenna, Red Button)
+        let key = { x: 5.5, y: 10.5, a: true }; 
+        let b1 = { x: 1.5, y: 1.5, a: true };
+        let b2 = { x: 10.5, y: 1.5, a: true }; 
+        let gombo = { x: 5.5, y: 1.5, a: true };
+
+        // 🕹️ NATIVE TOUCH JOYSTICK
         const jc = document.getElementById('jc'), js = document.getElementById('js');
-        
         function touchJoy(e) {
             e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches[0];
             let jX = t.clientX - (r.left + r.width/2), jY = t.clientY - (r.top + r.height/2);
             let dist = Math.min(30, Math.hypot(jX, jY)), ang = Math.atan2(jY, jX);
             js.style.transform = `translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; mvY = Math.sin(ang)*dist / 30;
         }
-        jc.addEventListener('touchstart', touchJoy, {passive:false}); jc.addEventListener('touchmove', touchJoy, {passive:false});
+        jc.addEventListener('touchstart', touchJoy, {passive:false}); 
+        jc.addEventListener('touchmove', touchJoy, {passive:false});
         jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
         
+        // VIEW LOOK SWIPE
         const lp = document.getElementById('l-pad'); let sx = 0;
         lp.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
         lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches[0].clientX - sx)/100)); }, {passive:true});
@@ -74,14 +98,22 @@
                 let dx = Math.cos(pa)*(-mvY)*0.06, dy = Math.sin(pa)*(-mvY)*0.06, nx = px + dx, ny = py + dy;
                 if (map[Math.floor(ny)][Math.floor(nx)] === 0 || (map[Math.floor(ny)][Math.floor(nx)] === 3 && doorOpen)) { px = nx; py = ny; }
             }
-            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) { key.a = false; hasKey = true; document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Unlock the center Red Gate!</span>"; }
-            if (hasKey && !doorOpen && Math.floor(py) === 8) { doorOpen = true; for(let x=3; x<=8; x++) map[8][x] = 0; document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Find 2 Drone Batteries in side rooms!</span>"; }
+            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) { 
+                key.a = false; hasKey = true; 
+                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Follow the radar back up and unlock the Red Gate Line!</span>"; 
+            }
+            if (hasKey && !doorOpen && Math.floor(py) === 8) { 
+                doorOpen = true; 
+                for(let x=3; x<=8; x++) map[8][x] = 0; 
+                document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the left and right rooms to grab 2 Custom Remotes!</span>"; 
+            }
             if (doorOpen && bats < 2) {
                 if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.6) { b1.a = false; bats++; }
                 if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.6) { b2.a = false; bats++; }
-                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Zakir & Mohamed Dev Studio Victory! 📶</span>";
+                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMUTES ACQUIRED! Zakir & Mohamed Studio Victory! 🏆</span>";
             }
         }
+
         function drawRadar() {
             rCtx.clearRect(0, 0, 100, 100); let s = 100 / 12;
             for (let y = 0; y < 12; y++) {
@@ -95,6 +127,7 @@
             if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s-2, gombo.y*s-2, 5, 5); }
             rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
+
         function drawMural(ctx, x, y, w, h, d) {
             ctx.fillStyle = '#f4edd2'; ctx.fillRect(x, y, w, h); ctx.strokeStyle = '#8b5a2b'; ctx.lineWidth = Math.max(1, 4/d); ctx.strokeRect(x, y, w, h);
             let sc = w / 120;
@@ -106,10 +139,12 @@
             ctx.fillStyle = '#000'; ctx.font = Math.max(5, Math.floor(8*sc)) + 'px monospace';
             ctx.fillText('GOMBO', x+10*sc, y+75*sc); ctx.fillText('MOHAJUSH', x+40*sc, y+75*sc); ctx.fillText('ZOYI', x+85*sc, y+75*sc);
         }
-        function draw() {
+
+        function gameLoop() {
             tick(); drawRadar();
             let w = window.innerWidth, h = window.innerHeight, hh = h/2;
             ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh); ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);
+            
             for (let c = 0; c < w; c++) {
                 let ra = (pa - fov/2) + (c / w) * fov, dist = 0, hit = false, type = 0, cr = Math.cos(ra), sr = Math.sin(ra);
                 while (!hit && dist < 16) {
@@ -117,23 +152,23 @@
                     if (cx < 0 || cx >= 12 || cy < 0 || cy >= 12) { hit = true; dist = 16; }
                     else if (map[cy][cx] > 0) { hit = true; type = map[cy][cx]; }
                 }
-                let wh = Math.min(h, h / (dist * Math.cos(ra - pa)));
-                if (type !== 4) { ctx.fillStyle = type === 3 ? '#cc2222' : '#7a4928'; ctx.globalAlpha = Math.max(0, 1 - (dist / 14)); ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0; }
-            }
-            let sAngle = Math.atan2(4.5 - py, 2.5 - px) - pa;
-            while (sAngle < -Math.PI) sAngle += Math.PI * 2; while (sAngle > Math.PI) sAngle -= Math.PI * 2;
-            let sDist = Math.hypot(2.5 - px, 4.5 - py);
-            if (sDist > 0.5 && sDist < 12 && Math.abs(sAngle) < fov) {
-                let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;
-                ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12)); drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist); ctx.restore();
-            }
-            let spr = [];
-            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4, item: 'KEY' }); 
-            if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3, item: 'BAT' });
-            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3, item: 'BAT' }); 
-            if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
-            spr.forEach(s => {
-                let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
+let wh = Math.min(h, h / (dist * Math.cos(ra - pa)));
+if (type !== 4) { ctx.fillStyle = type === 3 ? '#cc2222' : '#7a4928'; ctx.globalAlpha = Math.max(0, 1 - (dist / 14)); ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0; }
+}
+let sAngle = Math.atan2(4.5 - py, 2.5 - px) - pa;
+while (sAngle < -Math.PI) sAngle += Math.PI * 2; while (sAngle > Math.PI) sAngle -= Math.PI * 2;
+let sDist = Math.hypot(2.5 - px, 4.5 - py);
+if (sDist > 0.5 && sDist < 12 && Math.abs(sAngle) < fov) {
+let scx = (w/2) + (Math.tan(sAngle) * (w/2) / Math.tan(fov/2)), szH = Math.min(h, h / (sDist * Math.cos(sAngle))), szW = szH * 1.5;
+ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12)); drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist); ctx.restore();
+}
+let spr = [];
+if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4, type: 'KEY' });
+if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.5, type: 'REMOTE' });
+if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.5, type: 'REMOTE' });
+if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
+spr.forEach(s => {
+let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
 while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;
 let sd = Math.hypot(sx, sy);
 if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {
@@ -144,18 +179,28 @@ ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);
 ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);
 ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);
 ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);
-} else if (s.item === 'BAT') {
-// 🛠️ RENDER YOUR HOVERING DRONE REMOTE MODEL IN 3D!
-ctx.fillStyle = '#333333'; ctx.fillRect(scx - sz/3, hh - sz/3, sz/1.5, sz); // Dark Gray Main Chassis Block
-ctx.fillStyle = '#e62e2e'; ctx.fillRect(scx - sz/15, hh - sz/1.5, sz/7, sz/3); // Red Antenna Shaft
-ctx.fillStyle = '#e62e2e'; ctx.beginPath(); ctx.arc(scx + sz/3, hh, sz/6, 0, Math.PI2); ctx.fill(); // Red Side Dial Button
-ctx.fillStyle = '#000'; ctx.font = Math.floor(sz/4) + 'px sans-serif'; ctx.fillText('📶', scx - sz/5, hh + sz/4); // Native display icons
+} else if (s.type === 'REMOTE') {
+// 📶 GRAPHICS INJECTION FOR YOUR CUSTOM TOOL DESIGN
+ctx.fillStyle = '#2a2a2a'; ctx.fillRect(scx - sz/3, hh - sz/4, sz/1.5, sz/1.2); // Dark Gray Remote Base Body
+ctx.fillStyle = '#e62e2e'; ctx.fillRect(scx - sz/15, hh - sz/1.8, sz/7, sz/3); // Blood-Red Antenna Stick
+ctx.fillStyle = '#e62e2e'; ctx.beginPath(); ctx.arc(scx + sz/4, hh - sz/10, sz/6, 0, Math.PI2); ctx.fill(); // Blood-Red Side Button
 } else {
 ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI2); ctx.fill();
 }
 ctx.globalAlpha = 1.0;
 }
 });
-requestAnimationFrame(draw);
+requestAnimationFrame(gameLoop);
 }
-setTimeout(() => { window.dispatchEvent(new Event('resize')); draw(); }, 100);
+// ⏰ FORCED NATIVE HARD-OVERRIDE TRIGGER
+document.getElementById('boot-btn').addEventListener('click', () => {
+document.getElementById('boot-screen').style.display = 'none';
+window.dispatchEvent(new Event('resize'));
+gameLoop();
+});
+document.getElementById('boot-btn').addEventListener('touchend', (e) => {
+e.preventDefault();
+document.getElementById('boot-screen').style.display = 'none';
+window.dispatchEvent(new Event('resize'));
+gameLoop();
+});

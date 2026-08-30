@@ -2,183 +2,115 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>Garten of Gombo</title>
     <style>
-        body, html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#111; font-family:monospace; user-select:none; -webkit-user-select:none; }
-        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.9); padding:12px; border:2px solid #d62222; z-index:99; text-align:center; font-size:14px; width:85%; max-width:400px; border-radius:4px; pointer-events:none; box-shadow: 0 0 10px rgba(214,34,34,0.5); }
-        #canvas { display:block; width:100vw; height:100vh; background:#0a0a0f; }
-        #controls { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; z-index:99; }
-        .ctrl-btn { width:60px; height:60px; background:#222; color:white; border:2px solid #e62e2e; font-size:20px; font-weight:bold; border-radius:10px; display:flex; justify-content:center; align-items:center; }
-        .ctrl-btn:active { background:#e62e2e; }
+        body,html { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:monospace; user-select:none; -webkit-user-select:none; }
+        #canvas { display:block; width:100vw; height:100vh; }
+        #ui { position:absolute; top:20px; left:50%; transform:translateX(-50%); color:white; background:rgba(0,0,0,0.85); padding:10px; border:2px solid #d62222; z-index:99; text-align:center; font-size:13px; width:80%; max-width:400px; border-radius:4px; pointer-events:none; }
+        #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; }
+        .pad { width:50%; height:100%; position:relative; }
+        .lbl { position:absolute; bottom:30px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:12px; font-weight:bold; }
     </style>
 </head>
 <body>
 
-    <!-- 🎮 ZAKIR & MOHAMED DEV STUDIO ADVANCED HUD -->
-    <div id="ui">
-        <b>Zakir & Mohamed Studio</b><br>
-        <span id="task" style="color:#ffcc00;">Task: Find the Yellow Keycard on the radar map!</span><br>
-        <span id="score" style="color:#ff69b4; display:none;">Eggs Collected: 0/7</span>
-    </div>
-
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the hall & grab the Yellow Keycard!</span></div>
     <canvas id="canvas"></canvas>
-
-    <div id="controls">
-        <div></div><div class="ctrl-btn" id="btn-up">▲</div><div></div>
-        <div class="ctrl-btn" id="btn-left">◀</div><div></div><div class="ctrl-btn" id="btn-right">▶</div>
-        <div></div><div class="ctrl-btn" id="btn-down">▼</div><div></div>
-    </div>
+    <div id="ctrls"><div class="pad" id="m-pad"><div class="lbl">◀ MOVE (SWIPE) ▶</div></div><div class="pad" id="l-pad"><div class="lbl">◀ LOOK (SWIPE) ▶</div></div></div>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', res); res();
 
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
+        let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0;
+        let map = [[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,2,0,0,2,0,0,0,1],[1,0,0,0,2,0,0,2,0,0,0,1],[1,1,1,0,1,0,0,1,0,1,1,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,1,1,3,1,0,0,1,3,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
 
-        // 🗺️ GAME STATE CONFIGURATIONS
-        let pX = window.innerWidth / 2, pY = window.innerHeight - 100;
-        const pRadius = 10;
-        
-        let hasKey = false, doorOpen = false, bats = 0, droneUnlocked = false;
-        let eggsCollected = 0, zoyiFed = false;
+        let key = { x: 3.5, y: 10.0, a: true }, b1 = { x: 2.5, y: 2.5, a: true }, b2 = { x: 9.5, y: 2.5, a: true }, gombo = { x: 6.0, y: 6.5, a: true };
+        let mv = { x: 0, y: 0 }, lk = 0;
 
-        // Coordinates System
-        let keyX = window.innerWidth / 2 - 80, keyY = window.innerHeight - 180;
-        let doorY = window.innerHeight - 260;
-        let b1X = window.innerWidth / 2 - 120, b1Y = window.innerHeight - 340;
-        let b2X = window.innerWidth / 2 + 120, b2Y = window.innerHeight - 340;
-        let gomboX = window.innerWidth / 2, gomboY = window.innerHeight - 440;
+        function pad(id, isM) {
+            const el = document.getElementById(id); let sx = 0, sy = 0;
+            el.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+            el.addEventListener('touchmove', e => {
+                let dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+                if (isM) { mv.x = Math.max(-1, Math.min(1, dx/50)); mv.y = Math.max(-1, Math.min(1, dy/50)); }
+                else { lk = Math.max(-0.04, Math.min(0.04, dx/500)); }
+            }, {passive:true});
+            el.addEventListener('touchend', () => { if (isM) { mv.x = 0; mv.y = 0; } else { lk = 0; } }, {passive:true});
+        }
+        pad('m-pad', true); pad('l-pad', false);
 
-        // 🦩 Zoyi Bird Playground System Parameters
-        let zoyiX = window.innerWidth / 2;
-        let zoyiY = window.innerHeight - 600;
-        
-        // 7 Glowing Egg Locations (Scattered around Zoyi Bird's chamber)
-        let eggs = [
-            {x: zoyiX - 100, y: zoyiY + 50, found: false}, {x: zoyiX + 100, y: zoyiY + 50, found: false},
-            {x: zoyiX - 120, y: zoyiY - 50, found: false}, {x: zoyiX + 120, y: zoyiY - 50, found: false},
-            {x: zoyiX - 40,  y: zoyiY - 100, found: false}, {x: zoyiX + 40,  y: zoyiY - 100, found: false},
-            {x: zoyiX,       y: zoyiY + 120, found: false}
-        ];
-
-        function move(dx, dy) {
-            pX += dx; pY += dy;
-
-            // Restrict Boundaries
-            if (pX < 20) pX = 20; if (pX > canvas.width - 20) pX = canvas.width - 20;
-            if (pY < 20) pY = 20; if (pY > canvas.height - 20) pY = canvas.height - 20;
-
-            // Door Barrier block
-            if (!doorOpen && pY - pRadius < doorY && pY + pRadius > doorY - 10) {
-                pY = doorY + pRadius;
-                document.getElementById('task').innerText = "Door Locked! Grab the Yellow Keycard first.";
+        function tick() {
+            pa += lk;
+            if (mv.y !== 0) {
+                let dx = Math.cos(pa) * (-mv.y) * 0.05, dy = Math.sin(pa) * (-mv.y) * 0.05;
+                let nx = px + dx, ny = py + dy;
+                if (map[Math.floor(py)][Math.floor(nx)] === 0 || (map[Math.floor(py)][Math.floor(nx)] === 3 && doorOpen)) px = nx;
+                if (map[Math.floor(ny)][Math.floor(px)] === 0 || (map[Math.floor(ny)][Math.floor(px)] === 3 && doorOpen)) py = ny;
             }
-
-            // Task A: Yellow Keycard
-            if (!hasKey && Math.hypot(pX - keyX, pY - keyY) < pRadius + 12) {
-                hasKey = true;
-                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Move up to open the Red Security Gate!</span>";
+            if (key.a && Math.hypot(px - key.x, py - key.y) < 0.5) {
+                key.a = false; hasKey = true;
+                document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate down the corridor!</span>";
             }
-
-            // Task B: Unlock Red Gate
-            if (hasKey && !doorOpen && Math.abs(pY - doorY) < pRadius + 15 && Math.abs(pX - window.innerWidth/2) < 60) {
-                doorOpen = true;
-                document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the center room to find 2 Green Drone Batteries!</span>";
+            if (hasKey && !doorOpen && Math.floor(py) === 8) {
+                doorOpen = true; map[8][3] = 0; map[8][8] = 0;
+                document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
             }
-
-            // Task C: Find 2 Batteries
-            if (doorOpen && !droneUnlocked) {
-                if (b1X !== -100 && Math.hypot(pX - b1X, pY - b1Y) < pRadius + 12) { b1X = -100; bats++; }
-                if (b2X !== -100 && Math.hypot(pX - b2X, pY - b2Y) < pRadius + 12) { b2X = -100; bats++; }
-                if (bats === 2) {
-                    droneUnlocked = true;
-                    document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>DRONE ACTIVATED! Task: Head north to Zoyi Bird's Playroom Abyss!</span>";
-                    document.getElementById('score').style.display = 'block';
-                }
-            }
-
-            // Task D: Zoyi Bird's Playground Egg Hunt
-            if (droneUnlocked && !zoyiFed) {
-                // Hunt Eggs
-                eggs.forEach(egg => {
-                    if (!egg.found && Math.hypot(pX - egg.x, pY - egg.y) < pRadius + 12) {
-                        egg.found = true;
-                        eggsCollected++;
-                        document.getElementById('score').innerText = `Eggs Collected: ${eggsCollected}/7`;
-                    }
-                });
-
-                // Return and Feed Zoyi Bird Beak
-                if (eggsCollected === 7) {
-                    document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: You have all 7 eggs! Move to Zoyi Bird's center blue beak circle!</span>";
-                    if (Math.hypot(pX - zoyiX, pY - zoyiY) < pRadius + 25) {
-                        zoyiFed = true;
-                        document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>PURPLE KEYCARD UNLOCKED! Zakir & Mohamed Dev Studio Victory! 🏆</span>";
-                    }
-                }
+            if (doorOpen && bats < 2) {
+                if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.5) { b1.a = false; bats++; }
+                if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.5) { b2.a = false; bats++; }
+                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed!</span>";
             }
         }
 
-        function setupTouch(id, dx, dy) {
-            const btn = document.getElementById(id); let timer;
-            function start(e) { e.preventDefault(); timer = setInterval(() => { move(dx, dy); }, 20); }
-            function stop() { clearInterval(timer); }
-            btn.addEventListener('touchstart', start); btn.addEventListener('touchend', stop);
-            btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', stop);
-        }
-        setupTouch('btn-up', 0, -5); setupTouch('btn-down', 0, 5); setupTouch('btn-left', -5, 0); setupTouch('btn-right', 5, 0);
-
-        // 🎨 RENDERING LOOPS
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tick();
+            let w = canvas.width, h = canvas.height, hh = h/2;
+            ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh);
+            ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);
 
-            // Floor Grids Layout
-            ctx.strokeStyle = '#222530'; ctx.lineWidth = 1;
-            for(let i=0; i<canvas.width; i+=40) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
-            for(let j=0; j<canvas.height; j+=40) { ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke(); }
-
-            // Perimeter Walls
-            ctx.strokeStyle = '#7a4928'; ctx.lineWidth = 10; ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
-
-            // Starting Gates
-            ctx.strokeStyle = '#4a2e80'; ctx.lineWidth = 6; ctx.beginPath();
-            ctx.moveTo(0, doorY); ctx.lineTo(canvas.width / 2 - 50, doorY);
-            ctx.moveTo(canvas.width / 2 + 50, doorY); ctx.lineTo(canvas.width, doorY); ctx.stroke();
-
-            if (!doorOpen) { ctx.strokeStyle = '#cc2222'; ctx.beginPath(); ctx.moveTo(canvas.width / 2 - 50, doorY); ctx.lineTo(canvas.width / 2 + 50, doorY); ctx.stroke(); }
-
-            // Keycard Target Dot
-            if (!hasKey) { ctx.fillStyle = '#ffcc00'; ctx.beginPath(); ctx.arc(keyX, keyY, 8, 0, Math.PI*2); ctx.fill(); }
-
-            // Battery Target Dots
-            ctx.fillStyle = '#00ff66';
-            if (b1X !== -100) { ctx.beginPath(); ctx.arc(b1X, b1Y, 8, 0, Math.PI*2); ctx.fill(); }
-            if (b2X !== -100) { ctx.beginPath(); ctx.arc(b2X, b2Y, 8, 0, Math.PI*2); ctx.fill(); }
-
-            // Mascot Box: GOMBO
-            ctx.fillStyle = '#e62e2e'; ctx.fillRect(gomboX - 20, gomboY - 20, 40, 40);
-            ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText('👹 GOMBO', gomboX - 22, gomboY + 5);
-
-            // 🦩 MASCOT ZONE: ZOYI BIRD PLAYGROUND ABYSS
-            if (droneUnlocked) {
-                // Draw Zoyi's Massive Beak Target Chute
-                ctx.fillStyle = zoyiFed ? '#00ff66' : '#ff69b4';
-                ctx.beginPath(); ctx.arc(zoyiX, zoyiY, 25, 0, Math.PI*2); ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-                ctx.fillStyle = '#000'; ctx.font = '10px monospace'; ctx.fillText('🦩 ZOYI', zoyiX - 18, zoyiY + 4);
-
-                // Draw 7 Magenta Eggs dots setup
-                ctx.fillStyle = '#ff00ff';
-                eggs.forEach(egg => {
-                    if (!egg.found) { ctx.beginPath(); ctx.arc(egg.x, egg.y, 6, 0, Math.PI*2); ctx.fill(); }
-                });
+            for (let c = 0; c < w; c++) {
+                let ra = (pa - fov/2) + (c / w) * fov, dist = 0, hit = false, type = 0;
+                let cr = Math.cos(ra), sr = Math.sin(ra);
+                while (!hit && dist < 16) {
+                    dist += 0.05;
+                    let cx = Math.floor(px + cr * dist), cy = Math.floor(py + sr * dist);
+                    if (cx < 0 || cx >= 12 || cy < 0 || cy >= 12) { hit = true; dist = 16; }
+                    else if (map[cy][cx] > 0) { hit = true; type = map[cy][cx]; }
+                }
+                let clr = type === 2 ? '#4a2e80' : type === 3 ? '#cc2222' : '#7a4928';
+                let wh = Math.min(h, h / (dist * Math.cos(ra - pa)));
+                ctx.fillStyle = clr; ctx.globalAlpha = Math.max(0, 1 - (dist / 14));
+                ctx.fillRect(c, hh - wh/2, 1, wh); ctx.globalAlpha = 1.0;
             }
 
-            // Player User Circle
-            ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(pX, pY, pRadius, 0, Math.PI * 2); ctx.fill();
+            let spr = [];
+            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4, lbl: 'KEY' });
+            if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3, lbl: 'BAT' });
+            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3, lbl: 'BAT' });
+            if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
 
+            spr.forEach(s => {
+                let sx = s.o.x - px, sy = s.o.y - py;
+                let sa = Math.atan2(sy, sx) - pa;
+                while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;
+                let sd = Math.hypot(sx, sy);
+                if (sd > 0.2 && sd < 14 && Math.abs(sa) < fov) {
+                    let scx = (w/2) + (Math.tan(sa) * (w/2) / Math.tan(fov/2)), sz = Math.min(h, (h/sd) * s.s);
+                    ctx.globalAlpha = Math.max(0, 1 - (sd / 12));
+                    if (s.g) {
+                        ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);
+                        ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);
+                        ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);
+                        ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);
+                    } else {
+                        ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill();
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+            });
             requestAnimationFrame(draw);
         }
         draw();

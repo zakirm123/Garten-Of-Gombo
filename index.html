@@ -11,32 +11,52 @@
         #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; }
         .pad { width:50%; height:100%; position:relative; }
         .lbl { position:absolute; bottom:30px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:12px; font-weight:bold; }
+        /* 🗺️ MINI RADAR MAP STYLING OVERLAY */
+        #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; display:block; }
     </style>
 </head>
 <body>
 
     <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the hall & grab the Yellow Keycard!</span></div>
+    
+    <!-- 🗺️ NATIVE MINI MAP LAYER COMPONENT -->
+    <canvas id="radar" width="100" height="100"></canvas>
+    
     <canvas id="canvas"></canvas>
     <div id="ctrls"><div class="pad" id="m-pad"><div class="lbl">◀ MOVE (SWIPE) ▶</div></div><div class="pad" id="l-pad"><div class="lbl">◀ LOOK (SWIPE) ▶</div></div></div>
 
     <script>
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        const radar = document.getElementById('radar'), rCtx = radar.getContext('2d');
+        
         function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', res); res();
 
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0;
-        let map = [[1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,2,0,0,2,0,0,0,1],[1,0,0,0,2,0,0,2,0,0,0,1],[1,1,1,0,1,0,0,1,0,1,1,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,1,0,0,0,1],[1,1,1,3,1,0,0,1,3,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1]];
+        let map = [,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+ ,
+            [1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
 
         let key = { x: 3.5, y: 10.0, a: true }, b1 = { x: 2.5, y: 2.5, a: true }, b2 = { x: 9.5, y: 2.5, a: true }, gombo = { x: 6.0, y: 6.5, a: true };
         let mv = { x: 0, y: 0 }, lk = 0;
 
         function pad(id, isM) {
             const el = document.getElementById(id); let sx = 0, sy = 0;
-            el.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, {passive:true});
+            el.addEventListener('touchstart', e => { sx = e.touches.clientX; sy = e.touches.clientY; }, {passive:true});
             el.addEventListener('touchmove', e => {
-                let dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+                let dx = e.touches.clientX - sx, dy = e.touches.clientY - sy;
                 if (isM) { mv.x = Math.max(-1, Math.min(1, dx/50)); mv.y = Math.max(-1, Math.min(1, dy/50)); }
-                else { lk = Math.max(-0.04, Math.min(0.04, dx/500)); }
+                else { lk = Math.max(-0.04, Math.min(0.04, dx/250)); } // Increased looking tracking speed sensitivity
             }, {passive:true});
             el.addEventListener('touchend', () => { if (isM) { mv.x = 0; mv.y = 0; } else { lk = 0; } }, {passive:true});
         }
@@ -45,7 +65,7 @@
         function tick() {
             pa += lk;
             if (mv.y !== 0) {
-                let dx = Math.cos(pa) * (-mv.y) * 0.05, dy = Math.sin(pa) * (-mv.y) * 0.05;
+                let dx = Math.cos(pa) * (-mv.y) * 0.06, dy = Math.sin(pa) * (-mv.y) * 0.06;
                 let nx = px + dx, ny = py + dy;
                 if (map[Math.floor(py)][Math.floor(nx)] === 0 || (map[Math.floor(py)][Math.floor(nx)] === 3 && doorOpen)) px = nx;
                 if (map[Math.floor(ny)][Math.floor(px)] === 0 || (map[Math.floor(ny)][Math.floor(px)] === 3 && doorOpen)) py = ny;
@@ -55,18 +75,42 @@
                 document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate down the corridor!</span>";
             }
             if (hasKey && !doorOpen && Math.floor(py) === 8) {
-                doorOpen = true; map[8][3] = 0; map[8][8] = 0;
+                doorOpen = true; map[8][4]=0; map[8][5]=0; map[8][6]=0; map[8][7]=0; // Opens Red Door Blocks
                 document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
             }
             if (doorOpen && bats < 2) {
                 if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.5) { b1.a = false; bats++; }
                 if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.5) { b2.a = false; bats++; }
-                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed!</span>";
+                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Coded by Zakir & Tested by Mohamed! 📶</span>";
             }
+        }
+
+        // 🎨 DRAW THE LIVE MINI-MAP RADAR COMPONENT
+        function drawRadar() {
+            rCtx.clearRect(0, 0, 100, 100);
+            let s = 100 / 12; // Cell scaling grid sizes
+            
+            // Draw walls grid map
+            for (let y = 0; y < 12; y++) {
+                for (let x = 0; x < 12; x++) {
+                    if (map[y][x] === 1) { rCtx.fillStyle = '#7a4928'; rCtx.fillRect(x*s, y*s, s, s); }
+                    else if (map[y][x] === 2) { rCtx.fillStyle = '#4a2e80'; rCtx.fillRect(x*s, y*s, s, s); }
+                    else if (map[y][x] === 3) { rCtx.fillStyle = '#cc2222'; rCtx.fillRect(x*s, y*s, s, s); }
+                }
+            }
+            // Draw Key Item target circle marker
+            if (key.a) { rCtx.fillStyle = '#ffcc00'; rCtx.beginPath(); rCtx.arc(key.x*s, key.y*s, 3, 0, Math.PI*2); rCtx.fill(); }
+            // Draw Gombo target tracker box marker
+            if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s - 2, gombo.y*s - 2, 5, 5); }
+            
+            // Draw Player dot placement coordinates tracker
+            rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
 
         function draw() {
             tick();
+            drawRadar();
+            
             let w = canvas.width, h = canvas.height, hh = h/2;
             ctx.fillStyle = '#18110b'; ctx.fillRect(0, 0, w, hh);
             ctx.fillStyle = '#2c2e3b'; ctx.fillRect(0, hh, w, hh);

@@ -17,22 +17,26 @@
     </style>
 </head>
 <body>
-    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Keycard and look for the Murals!</span></div>
+
+    <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Use the joystick to find the Yellow Keycard and inspect the Murals!</span></div>
     <canvas id="radar" width="100" height="100"></canvas>
     <canvas id="canvas"></canvas>
+    
     <div id="ctrls">
         <div class="pad"><div id="jc"><div id="js"></div></div><div class="lbl" style="text-align:left; left:40px;">◀ JOYSTICK TO MOVE</div></div>
         <div class="pad" id="l-pad"><div class="lbl">SWIPE HERE TO LOOK ▶</div></div>
     </div>
+
     <script>
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         const radar = document.getElementById('radar'), rCtx = radar.getContext('2d');
+        
         function res() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', res); res();
         
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0, mvY = 0, lk = 0;
         
-        // 🗺️ HARDCODED VERIFIED DAYCARE MAP ARRAY (Zero placeholders, 1=Wall, 3=Gate, 4=Mural)
+        // 🗺️ 100% FIXED SECURE DATA MATRIX (1=Wall, 3=Gate, 4=Mural Banner)
         let map = [,
  ,
  ,
@@ -51,7 +55,7 @@
         const jc = document.getElementById('jc'), js = document.getElementById('js');
         
         function touchJoy(e) {
-            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches;
+            e.preventDefault(); const r = jc.getBoundingClientRect(), t = e.touches[0];
             let jX = t.clientX - (r.left + r.width/2), jY = t.clientY - (r.top + r.height/2);
             let dist = Math.min(30, Math.hypot(jX, jY)), ang = Math.atan2(jY, jX);
             js.style.transform = `translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px)`; mvY = Math.sin(ang)*dist / 30;
@@ -60,23 +64,22 @@
         jc.addEventListener('touchend', () => { js.style.transform = 'translate(0px,0px)'; mvY = 0; }, {passive:true});
         
         const lp = document.getElementById('l-pad'); let sx = 0;
-        lp.addEventListener('touchstart', e => { sx = e.touches.clientX; }, {passive:true});
-        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches.clientX - sx)/100)); }, {passive:true});
+        lp.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, {passive:true});
+        lp.addEventListener('touchmove', e => { lk = Math.max(-0.04, Math.min(0.04, (e.touches[0].clientX - sx)/100)); }, {passive:true});
         lp.addEventListener('touchend', () => { lk = 0; }, {passive:true});
         
         function tick() {
             pa += lk;
             if (mvY !== 0) {
-                let dx = Math.cos(pa)*(-mvY)*0.05, dy = Math.sin(pa)*(-mvY)*0.05, nx = px + dx, ny = py + dy;
-                if (map[Math.floor(py)][Math.floor(nx)] === 0 || (map[Math.floor(py)][Math.floor(nx)] === 3 && doorOpen)) px = nx;
-                if (map[Math.floor(ny)][Math.floor(px)] === 0 || (map[Math.floor(ny)][Math.floor(px)] === 3 && doorOpen)) py = ny;
+                let dx = Math.cos(pa)*(-mvY)*0.06, dy = Math.sin(pa)*(-mvY)*0.06, nx = px + dx, ny = py + dy;
+                if (map[Math.floor(ny)][Math.floor(nx)] === 0 || (map[Math.floor(ny)][Math.floor(nx)] === 3 && doorOpen)) { px = nx; py = ny; }
             }
             if (key.a && Math.hypot(px - key.x, py - key.y) < 0.6) { key.a = false; hasKey = true; document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Unlock the center Red Gate!</span>"; }
             if (hasKey && !doorOpen && Math.floor(py) === 8) { doorOpen = true; for(let x=3; x<=8; x++) map[8][x] = 0; document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Find 2 Drone Batteries in side rooms!</span>"; }
             if (doorOpen && bats < 2) {
                 if (b1.a && Math.hypot(px - b1.x, py - b1.y) < 0.6) { b1.a = false; bats++; }
                 if (b2.a && Math.hypot(px - b2.x, py - b2.y) < 0.6) { b2.a = false; bats++; }
-                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Victory! 📶</span>";
+                if (bats === 2) document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>DRONE REMOTE UNLOCKED! Zakir & Mohamed Dev Studio Victory! 📶</span>";
             }
         }
         function drawRadar() {
@@ -125,8 +128,10 @@
                 ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (sDist / 12)); drawMural(ctx, scx - szW/2, hh - szH/2, szW, szH, sDist); ctx.restore();
             }
             let spr = [];
-            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4 }); if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3 });
-            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3 }); if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
+            if (key.a) spr.push({ o: key, c: '#ffcc00', s: 0.4, item: 'KEY' }); 
+            if (b1.a) spr.push({ o: b1, c: '#00ff66', s: 0.3, item: 'BAT' });
+            if (b2.a) spr.push({ o: b2, c: '#00ff66', s: 0.3, item: 'BAT' }); 
+            if (gombo.a) spr.push({ o: gombo, c: '#e62e2e', s: 1.4, g: true });
             spr.forEach(s => {
                 let sx = s.o.x - px, sy = s.o.y - py, sa = Math.atan2(sy, sx) - pa;
 while (sa < -Math.PI) sa += Math.PI * 2; while (sa > Math.PI) sa -= Math.PI * 2;
@@ -139,14 +144,18 @@ ctx.fillStyle = s.c; ctx.fillRect(scx - sz/2, hh - sz/2, sz, sz);
 ctx.fillStyle = '#fff'; ctx.fillRect(scx - sz/4, hh - sz/5, sz/5, sz/5); ctx.fillRect(scx + sz/12, hh - sz/5, sz/5, sz/5);
 ctx.fillStyle = '#000'; ctx.fillRect(scx - sz/6, hh - sz/7, sz/15, sz/15); ctx.fillRect(scx + sz/6, hh - sz/7, sz/15, sz/15);
 ctx.fillStyle = '#ffff00'; ctx.fillRect(scx - sz/3, hh - sz/1.6, sz/6, sz/4); ctx.fillStyle = '#00ffff'; ctx.fillRect(scx + sz/6, hh - sz/1.6, sz/6, sz/4);
-} else { ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI*2); ctx.fill(); }
+} else if (s.item === 'BAT') {
+// 🛠️ RENDER YOUR HOVERING DRONE REMOTE MODEL IN 3D!
+ctx.fillStyle = '#333333'; ctx.fillRect(scx - sz/3, hh - sz/3, sz/1.5, sz); // Dark Gray Main Chassis Block
+ctx.fillStyle = '#e62e2e'; ctx.fillRect(scx - sz/15, hh - sz/1.5, sz/7, sz/3); // Red Antenna Shaft
+ctx.fillStyle = '#e62e2e'; ctx.beginPath(); ctx.arc(scx + sz/3, hh, sz/6, 0, Math.PI2); ctx.fill(); // Red Side Dial Button
+ctx.fillStyle = '#000'; ctx.font = Math.floor(sz/4) + 'px sans-serif'; ctx.fillText('📶', scx - sz/5, hh + sz/4); // Native display icons
+} else {
+ctx.fillStyle = s.c; ctx.beginPath(); ctx.arc(scx, hh, sz/4, 0, Math.PI2); ctx.fill();
+}
 ctx.globalAlpha = 1.0;
 }
 });
 requestAnimationFrame(draw);
 }
-// Forced native redraw loop parameters trigger
-setTimeout(() => {
-window.dispatchEvent(new Event('resize'));
-draw();
-}, 150);
+setTimeout(() => { window.dispatchEvent(new Event('resize')); draw(); }, 100);

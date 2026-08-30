@@ -11,7 +11,6 @@
         #ctrls { position:absolute; top:0; left:0; width:100%; height:100%; z-index:90; display:flex; }
         .pad { width:50%; height:100%; position:relative; }
         .lbl { position:absolute; bottom:30px; width:100%; text-align:center; color:rgba(255,255,255,0.4); font-size:12px; font-weight:bold; }
-        /* 🗺️ MINI RADAR MAP STYLING OVERLAY */
         #radar { position:absolute; top:20px; right:20px; width:100px; height:100px; background:rgba(0,0,0,0.7); border:2px solid #ffcc00; z-index:99; border-radius:4px; display:block; }
     </style>
 </head>
@@ -19,9 +18,7 @@
 
     <div id="ui"><b>Zakir & Mohamed Studio</b><br><span id="task" style="color:#ffcc00;">Task: Walk down the hall & grab the Yellow Keycard!</span></div>
     
-    <!-- 🗺️ NATIVE MINI MAP LAYER COMPONENT -->
     <canvas id="radar" width="100" height="100"></canvas>
-    
     <canvas id="canvas"></canvas>
     <div id="ctrls"><div class="pad" id="m-pad"><div class="lbl">◀ MOVE (SWIPE) ▶</div></div><div class="pad" id="l-pad"><div class="lbl">◀ LOOK (SWIPE) ▶</div></div></div>
 
@@ -33,6 +30,8 @@
         window.addEventListener('resize', res); res();
 
         let px = 3.5, py = 4.5, pa = -Math.PI/2, fov = Math.PI/3, hasKey = false, doorOpen = false, bats = 0;
+        
+        // 🛠️ FIX APPLIED: Map array numbers restored so the engine can draw the 3D walls!
         let map = [,
  ,
  ,
@@ -47,7 +46,7 @@
             [1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
-        let key = { x: 3.5, y: 10.0, a: true }, b1 = { x: 2.5, y: 2.5, a: true }, b2 = { x: 9.5, y: 2.5, a: true }, gombo = { x: 6.0, y: 6.5, a: true };
+        let key = { x: 5.5, y: 10.0, a: true }, b1 = { x: 2.5, y: 2.5, a: true }, b2 = { x: 9.5, y: 2.5, a: true }, gombo = { x: 6.0, y: 2.5, a: true };
         let mv = { x: 0, y: 0 }, lk = 0;
 
         function pad(id, isM) {
@@ -56,7 +55,7 @@
             el.addEventListener('touchmove', e => {
                 let dx = e.touches.clientX - sx, dy = e.touches.clientY - sy;
                 if (isM) { mv.x = Math.max(-1, Math.min(1, dx/50)); mv.y = Math.max(-1, Math.min(1, dy/50)); }
-                else { lk = Math.max(-0.04, Math.min(0.04, dx/250)); } // Increased looking tracking speed sensitivity
+                else { lk = Math.max(-0.04, Math.min(0.04, dx/250)); }
             }, {passive:true});
             el.addEventListener('touchend', () => { if (isM) { mv.x = 0; mv.y = 0; } else { lk = 0; } }, {passive:true});
         }
@@ -75,7 +74,7 @@
                 document.getElementById('task').innerHTML = "<span style='color:#00ff66;'>Task: Open the Red Gate down the corridor!</span>";
             }
             if (hasKey && !doorOpen && Math.floor(py) === 8) {
-                doorOpen = true; map[8][4]=0; map[8][5]=0; map[8][6]=0; map[8][7]=0; // Opens Red Door Blocks
+                doorOpen = true; map[8][4]=0; map[8][5]=0; map[8][6]=0; map[8][7]=0;
                 document.getElementById('task').innerHTML = "<span style='color:#ffcc00;'>Task: Clear the side rooms to find 2 Drone Batteries!</span>";
             }
             if (doorOpen && bats < 2) {
@@ -85,12 +84,9 @@
             }
         }
 
-        // 🎨 DRAW THE LIVE MINI-MAP RADAR COMPONENT
         function drawRadar() {
             rCtx.clearRect(0, 0, 100, 100);
-            let s = 100 / 12; // Cell scaling grid sizes
-            
-            // Draw walls grid map
+            let s = 100 / 12;
             for (let y = 0; y < 12; y++) {
                 for (let x = 0; x < 12; x++) {
                     if (map[y][x] === 1) { rCtx.fillStyle = '#7a4928'; rCtx.fillRect(x*s, y*s, s, s); }
@@ -98,12 +94,8 @@
                     else if (map[y][x] === 3) { rCtx.fillStyle = '#cc2222'; rCtx.fillRect(x*s, y*s, s, s); }
                 }
             }
-            // Draw Key Item target circle marker
             if (key.a) { rCtx.fillStyle = '#ffcc00'; rCtx.beginPath(); rCtx.arc(key.x*s, key.y*s, 3, 0, Math.PI*2); rCtx.fill(); }
-            // Draw Gombo target tracker box marker
             if (gombo.a) { rCtx.fillStyle = '#e62e2e'; rCtx.fillRect(gombo.x*s - 2, gombo.y*s - 2, 5, 5); }
-            
-            // Draw Player dot placement coordinates tracker
             rCtx.fillStyle = '#00ffff'; rCtx.beginPath(); rCtx.arc(px*s, py*s, 3, 0, Math.PI*2); rCtx.fill();
         }
 
